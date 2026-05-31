@@ -1,252 +1,291 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>VIRUS SIMULATION CORE</title>
+<title>AAA VIRUS SIMULATION</title>
 
 <style>
 body{
     margin:0;
-    background:black;
-    color:#00ffcc;
-    font-family:monospace;
     overflow:hidden;
+    background:black;
+    font-family:monospace;
 }
 
-/* =========================
-   GLOBAL LAYERS
-========================= */
+canvas{
+    display:block;
+}
 
-.screen{
+/* UI */
+#ui{
     position:absolute;
-    inset:0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    opacity:0;
-    pointer-events:none;
-    transition:2s ease;
+    top:20px;
+    left:20px;
+    z-index:10;
 }
 
-.active{
-    opacity:1;
-    pointer-events:auto;
-}
-
-/* =========================
-   CINEMATIC BACKDROP
-========================= */
-
-#bgGlow{
-    position:absolute;
-    inset:0;
-    background:
-        radial-gradient(circle at center, rgba(0,255,200,0.08), transparent 60%),
-        radial-gradient(circle at top, rgba(0,255,200,0.05), transparent 70%);
-    animation:pulse 6s infinite alternate;
-}
-
-@keyframes pulse{
-    from{ transform:scale(1); opacity:0.5;}
-    to{ transform:scale(1.1); opacity:1;}
-}
-
-/* =========================
-   RNA VISUAL
-========================= */
-
-#rna{
-    font-size:18px;
-    letter-spacing:6px;
-    opacity:0;
-    transform:scale(0.8);
-    transition:3s ease;
-}
-
-.rnaActive{
-    opacity:1;
-    transform:scale(1.2);
-    text-shadow:0 0 15px #00ffcc;
-}
-
-/* =========================
-   VIRUS CORE
-========================= */
-
-#virusCore{
-    width:120px;
-    height:120px;
-    border:2px solid #00ffcc;
-    border-radius:50%;
-    margin-top:30px;
-    opacity:0;
-    transform:scale(0.5);
-    transition:3s ease;
-    box-shadow:0 0 0px #00ffcc;
-}
-
-.coreActive{
-    opacity:1;
-    transform:scale(1.4);
-    box-shadow:0 0 40px #00ffcc;
-}
-
-/* infection pulse */
-.infect{
-    animation:infectPulse 1s infinite alternate;
-}
-
-@keyframes infectPulse{
-    from{ filter:hue-rotate(0deg) brightness(1);}
-    to{ filter:hue-rotate(120deg) brightness(1.5);}
-}
-
-/* =========================
-   TEXT CINEMA
-========================= */
-
-h1{
-    text-shadow:0 0 20px #00ffcc;
-    letter-spacing:3px;
-}
-
-.fadeText{
-    opacity:0;
-    transform:translateY(20px);
-    transition:2s;
-}
-
-.showText{
-    opacity:1;
-    transform:translateY(0);
-}
-
-/* INPUT */
 input, button{
     background:black;
-    border:1px solid #00ffcc;
     color:#00ffcc;
+    border:1px solid #00ffcc;
     padding:10px;
     font-family:monospace;
-    margin-top:10px;
 }
 
-button:hover{
-    background:#00ffcc;
-    color:black;
+/* subtle glow overlay (fake bloom) */
+#bloom{
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at center, rgba(0,255,200,0.08), transparent 60%);
+    pointer-events:none;
+    mix-blend-mode:screen;
 }
 </style>
 </head>
 
 <body>
 
-<div id="bgGlow"></div>
-
-<!-- RNA INPUT -->
-<div id="screen1" class="screen active">
-    <h1>RNA INPUT REQUIRED</h1>
-    <input id="rnaInput" placeholder="Paste RNA sequence">
-    <button onclick="startSequence()">INITIALIZE</button>
+<div id="ui">
+    <input id="rna" placeholder="RNA sequence">
+    <button onclick="start()">INITIATE</button>
 </div>
 
-<!-- BUILD -->
-<div id="screen2" class="screen">
-    <h1 class="fadeText" id="t1">SEQUENCE ACCEPTED</h1>
-    <div id="rna">AUGCGAUCGUAACGUGCUAUGCGA</div>
-    <div id="virusCore"></div>
-</div>
+<div id="bloom"></div>
 
-<!-- INFECTION -->
-<div id="screen3" class="screen">
-    <h1 class="fadeText" id="t2">INFECTION EVENT DETECTED</h1>
-    <p class="fadeText" id="t3">HOST: E. COLI // STATUS: COMPROMISED</p>
-</div>
-
-<!-- NAME -->
-<div id="screen4" class="screen">
-    <h1>ENTITY FORMATION</h1>
-    <p>ENTERBACTERIA ________</p>
-    <input id="nameInput">
-    <button onclick="checkName()">CONFIRM</button>
-</div>
-
-<!-- FINAL -->
-<div id="screen5" class="screen">
-    <h1 id="finalName">ENTEROBACTERIA GENESIS</h1>
-    <p class="fadeText" id="finalText">SYSTEM CREATION COMPLETE</p>
-</div>
+<canvas id="c"></canvas>
 
 <script>
 
-const correctRNA = "AUGCGAUCGUAACGUGCUAUGCGA";
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
 
-function show(id){
-    document.querySelectorAll(".screen")
-    .forEach(s => s.classList.remove("active"));
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
-    document.getElementById(id).classList.add("active");
+/* =========================
+   CAMERA SYSTEM (AAA CORE)
+========================= */
+
+let cam = {
+    x:0,
+    y:0,
+    zoom:1,
+    shake:0
+};
+
+function applyCamera(){
+    ctx.setTransform(
+        cam.zoom, 0,
+        0, cam.zoom,
+        cam.x + (Math.random()-0.5)*cam.shake,
+        cam.y + (Math.random()-0.5)*cam.shake
+    );
+}
+
+function resetCamera(){
+    ctx.setTransform(1,0,0,1,0,0);
 }
 
 /* =========================
-   CINEMATIC START
+   STATE
 ========================= */
 
-function startSequence(){
-
-    const val = document.getElementById("rnaInput").value.trim();
-
-    if(val !== correctRNA) return;
-
-    show("screen2");
-
-    // TEXT FADE IN
-    setTimeout(() => {
-        document.getElementById("t1").classList.add("showText");
-    }, 800);
-
-    // RNA REVEAL
-    setTimeout(() => {
-        document.getElementById("rna").classList.add("rnaActive");
-    }, 1500);
-
-    // VIRUS BUILD
-    setTimeout(() => {
-        document.getElementById("virusCore").classList.add("coreActive");
-    }, 2500);
-
-    // INFECTION SHIFT
-    setTimeout(() => {
-        show("screen3");
-    }, 5500);
-
-    setTimeout(() => {
-        document.getElementById("t2").classList.add("showText");
-        document.getElementById("t3").classList.add("showText");
-    }, 6000);
-
-    // MOVE TO NAME
-    setTimeout(() => {
-        show("screen4");
-    }, 9000);
-}
+let stage = 0;
+let particles = [];
+let virus = null;
+let cell = null;
 
 /* =========================
-   NAME CHECK
+   RNA
 ========================= */
 
-function checkName(){
+function createRNA(str){
+    particles = [];
 
-    const val = document.getElementById("nameInput").value.trim().toLowerCase();
-
-    if(val === "genesis"){
-        show("screen5");
-
-        setTimeout(() => {
-            document.getElementById("finalText").classList.add("showText");
-        }, 1000);
+    for(let i=0;i<str.length;i++){
+        particles.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height,
+            tx: canvas.width/2 + (Math.random()-0.5)*180,
+            ty: canvas.height/2 + (Math.random()-0.5)*180,
+            char: str[i]
+        });
     }
 }
+
+/* =========================
+   VIRUS
+========================= */
+
+function buildVirus(){
+    virus = {
+        x: canvas.width/2,
+        y: canvas.height/2,
+        r: 70,
+        rot:0
+    };
+}
+
+/* =========================
+   CELL
+========================= */
+
+function createCell(){
+    cell = {
+        x: canvas.width*0.75,
+        y: canvas.height/2,
+        r: 100,
+        pulse:0,
+        mutated:false
+    };
+}
+
+/* =========================
+   START
+========================= */
+
+function start(){
+    const val = document.getElementById("rna").value.trim();
+    if(!val) return;
+
+    createRNA(val);
+    createCell();
+
+    stage = 1;
+}
+
+/* =========================
+   DRAW LOOP
+========================= */
+
+function draw(){
+
+    // background fade (motion persistence)
+    ctx.fillStyle="rgba(0,0,0,0.35)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    resetCamera();
+    applyCamera();
+
+    /* =========================
+       STAGE 1 RNA
+    ========================= */
+
+    if(stage === 1){
+
+        let done = true;
+
+        particles.forEach(p=>{
+            p.x += (p.tx - p.x)*0.06;
+            p.y += (p.ty - p.y)*0.06;
+
+            ctx.fillStyle="#00ffcc";
+            ctx.fillText(p.char, p.x, p.y);
+
+            if(Math.abs(p.x-p.tx)>1) done=false;
+        });
+
+        if(done){
+            buildVirus();
+            stage = 2;
+        }
+    }
+
+    /* =========================
+       STAGE 2 VIRUS BUILD
+    ========================= */
+
+    if(stage >= 2 && virus){
+
+        virus.rot += 0.02;
+
+        ctx.strokeStyle="#00ffcc";
+        ctx.beginPath();
+        ctx.arc(virus.x, virus.y, virus.r, 0, Math.PI*2);
+        ctx.stroke();
+
+        // spikes
+        for(let i=0;i<14;i++){
+            let a = i*(Math.PI*2/14)+virus.rot;
+
+            let x1 = virus.x + Math.cos(a)*virus.r;
+            let y1 = virus.y + Math.sin(a)*virus.r;
+
+            let x2 = virus.x + Math.cos(a)*(virus.r+30);
+            let y2 = virus.y + Math.sin(a)*(virus.r+30);
+
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+        }
+
+        virus.x += (cell.x - virus.x)*0.01;
+        virus.y += (cell.y - virus.y)*0.01;
+
+        if(Math.abs(virus.x-cell.x)<5){
+            stage = 3;
+
+            // 🔥 INFECTION IMPACT
+            cam.shake = 25;
+            cam.zoom = 1.6;
+
+            setTimeout(()=>{
+                cam.shake = 0;
+                cam.zoom = 1;
+                stage = 4;
+            }, 800);
+        }
+    }
+
+    /* =========================
+       STAGE 3 (FLASH ONLY)
+    ========================= */
+
+    if(stage === 3){
+        ctx.fillStyle="rgba(0,255,200,0.25)";
+        ctx.beginPath();
+        ctx.arc(cell.x,cell.y,200,0,Math.PI*2);
+        ctx.fill();
+    }
+
+    /* =========================
+       STAGE 4 MUTATION
+    ========================= */
+
+    if(stage === 4){
+
+        cell.pulse += 0.05;
+
+        // cell body
+        ctx.strokeStyle="#00ffcc";
+        ctx.beginPath();
+        ctx.arc(cell.x, cell.y, cell.r, 0, Math.PI*2);
+        ctx.stroke();
+
+        // internal “mitochondria-like nodes”
+        for(let i=0;i<8;i++){
+            let a = i*(Math.PI*2/8)+cell.pulse;
+
+            let mx = cell.x + Math.cos(a)*35;
+            let my = cell.y + Math.sin(a)*35;
+
+            ctx.fillStyle="#00ffcc";
+            ctx.beginPath();
+            ctx.arc(mx,my,6,0,Math.PI*2);
+            ctx.fill();
+        }
+
+        ctx.fillStyle="#00ffcc";
+        ctx.font="18px monospace";
+        ctx.fillText("MUTATION COMPLETE: ORGANELLE STRUCTURE FORMED", 50, 60);
+    }
+
+    resetCamera();
+
+    requestAnimationFrame(draw);
+}
+
+draw();
 
 </script>
 
