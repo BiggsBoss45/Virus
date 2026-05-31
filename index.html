@@ -108,11 +108,12 @@ input,button{
     position:absolute;
     top:0;
     left:50%;
-    transform:translate(-50%, -20%) scale(0.4);
+    transform:translate(-50%, -10%) scale(0.65);
     width:90px;
     height:140px;
     opacity:0;
-    transition:all 1s ease;
+    transition:all 1.2s ease;
+    z-index:5;
 }
 
 /* capsid */
@@ -229,6 +230,8 @@ const bacteria = document.getElementById("bacteria");
 const logBox = document.getElementById("log");
 const camera = document.getElementById("camera");
 
+const DOCK_Y = "52%";  // aligns with top of your E. coli body
+
 const rnaPayload = document.getElementById("rnaPayload");
 const mito = document.getElementById("mitochondria");
 
@@ -281,17 +284,30 @@ async function assembleRNA(){
 }
 
 /* VIRUS DESCEND */
-async function spawnVirus(){
-    logBox.innerText = "PHAGE DESCENDING...";
+async function spawnPhage(){
+
+    logBox.innerText = "BACTERIOPHAGE DESCENDING...";
 
     virus.style.opacity = 1;
-    virus.style.top = "10%";
+
+    // start above cell
+    virus.style.top = "5%";
+    virus.style.transform = "translateX(-50%) scale(0.65)";
+
+    await sleep(900);
+
+    // approach cell surface
+    virus.style.top = "30%";
+
+    await sleep(900);
+
+    // final docking position (ON membrane)
+    virus.style.top = DOCK_Y;
+
+    virus.style.transform = "translateX(-50%) scale(0.6) rotate(2deg)";
 
     await sleep(700);
-
-    virus.style.top = "40%";
 }
-
 /* INJECTION */
 async function inject(){
     logBox.innerText = "INJECTOR ACTIVATED...";
@@ -344,7 +360,7 @@ runBtn.onclick = async () => {
     logBox.innerText = "SEQUENCE ACCEPTED";
 
     await zoom();
-    await spawnVirus();
+    await spawnPhage();
     await assembleRNA();
     await inject();
     await mitoRise();
