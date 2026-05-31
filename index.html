@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GENESIS SIMULATION CORE</title>
+<title>GENESIS SIMULATION CORE - FIXED</title>
 
 <style>
 body{
@@ -18,6 +18,7 @@ body{
     width:100vw;
     height:100vh;
     perspective:1200px;
+    overflow:hidden;
 }
 
 #camera{
@@ -28,44 +29,55 @@ body{
     transition: transform 2s ease-in-out;
 }
 
-/* BACKGROUND */
-.layer{
+.layer-back,.layer-mid,.layer-front{
     position:absolute;
     width:100%;
     height:100%;
 }
 
-/* E. COLI CELL */
-#ecoli{
-    width:180px;
-    height:180px;
-    border-radius:50%;
-    border:2px solid #00ffcc;
+.layer-back{transform:translateZ(-600px) scale(2);opacity:0.25;}
+.layer-mid{transform:translateZ(-200px) scale(1.3);opacity:0.5;}
+
+.star,.particle{
     position:absolute;
-    top:50%;
-    left:60%;
-    transform:translate(-50%,-50%);
-    box-shadow:0 0 10px #00ffcc;
-    opacity:0;
-    overflow:hidden;
+    background:#00ffcc;
+    border-radius:50%;
 }
 
-/* CAPSID */
+.star{width:2px;height:2px;}
+.particle{width:6px;height:6px;opacity:0.2;}
+
+#virusCore{
+    width:70px;height:70px;
+    border-radius:50%;
+    position:absolute;
+    top:50%;left:40%;
+    transform:scale(0);
+    opacity:0;
+    background:radial-gradient(circle,#00ffcc,#003333);
+    box-shadow:0 0 25px #00ffcc;
+}
+
+#bacteria{
+    width:160px;height:160px;
+    border-radius:50%;
+    position:absolute;
+    top:50%;left:55%;
+    border:2px solid #00ffcc;
+    opacity:0;
+}
+
 #capsid{
     position:absolute;
-    width:120px;
-    height:120px;
-    top:50%;
-    left:30%;
+    width:120px;height:120px;
+    top:50%;left:50%;
     transform:translate(-50%,-50%) scale(0);
-    opacity:1;
+    opacity:0;
 }
 
-/* NODE + EDGE */
 .node{
     position:absolute;
-    width:10px;
-    height:10px;
+    width:10px;height:10px;
     border-radius:50%;
     background:#00ffcc;
 }
@@ -77,24 +89,9 @@ body{
     transform-origin:left center;
 }
 
-/* MITOCHONDRIA (IMPOSSIBLE ORGANELLE) */
-.mito{
-    position:absolute;
-    width:50px;
-    height:25px;
-    border-radius:50%;
-    background:radial-gradient(circle,#ffcc00,#ff6600);
-    box-shadow:0 0 40px orange;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%) scale(0);
-    opacity:0;
-}
-
 #ui{
     position:absolute;
-    top:10px;
-    width:100%;
+    top:20px;width:100%;
     text-align:center;
 }
 
@@ -102,7 +99,19 @@ input,button{
     background:black;
     border:1px solid #00ffcc;
     color:#00ffcc;
-    padding:8px;
+    padding:10px;
+}
+
+button:hover{
+    background:#00ffcc;
+    color:black;
+}
+
+#rnaDisplay{
+    position:absolute;
+    bottom:20px;
+    width:100%;
+    text-align:center;
 }
 </style>
 </head>
@@ -110,173 +119,119 @@ input,button{
 <body>
 
 <div id="ui">
-<input id="rnaInput" placeholder="RNA sequence">
-<button onclick="start()">RUN</button>
+    <input id="rnaInput" placeholder="Enter RNA sequence">
+    <button onclick="startSimulation()">GENERATE</button>
 </div>
 
 <div id="space">
-<div id="camera">
+    <div id="camera">
+        <div class="layer-back" id="back"></div>
+        <div class="layer-mid" id="mid"></div>
 
-<div id="capsid"></div>
-<div id="ecoli">
-    <div class="mito" id="mito"></div>
+        <div class="layer-front">
+            <div id="virusCore"></div>
+            <div id="bacteria"></div>
+            <div id="capsid"></div>
+        </div>
+    </div>
 </div>
 
-</div>
-</div>
+<div id="rnaDisplay"></div>
 
 <script>
 
 const camera = document.getElementById("camera");
+const virusCore = document.getElementById("virusCore");
+const bacteria = document.getElementById("bacteria");
 const capsid = document.getElementById("capsid");
-const ecoli = document.getElementById("ecoli");
-const mito = document.getElementById("mito");
+const rnaDisplay = document.getElementById("rnaDisplay");
 
-function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-/* =========================
-   SAFE START WRAPPER
-========================= */
-async function start(){
-    try {
-
-        const input = document.getElementById("rnaInput");
-
-        if(!input){
-            console.error("RNA input not found in DOM");
-            return;
-        }
-
-        const rna = input.value.trim();
-
-        console.log("RNA RECEIVED:", rna);
-
-        if(!rna){
-            alert("Enter RNA sequence");
-            return;
-        }
-
-        // UI feedback (proves input works instantly)
-        input.disabled = true;
-
-        const readout = document.createElement("div");
-        readout.style.position = "absolute";
-        readout.style.bottom = "20px";
-        readout.style.width = "100%";
-        readout.style.textAlign = "center";
-        readout.style.color = "#00ffcc";
-        readout.innerText = "RNA LOCKED: " + rna;
-        document.body.appendChild(readout);
-
-        await buildCapsid();
-        await flyCapsid();
-        await dock();
-        await revealMito();
-
-    } catch (err){
-        console.error("SIMULATION ERROR:", err);
-        alert("Simulation crashed — check console (F12)");
-    }
+function sleep(ms){
+    return new Promise(r => setTimeout(r, ms));
 }
 
-/* =========================
-   CAPSID BUILD
-========================= */
+/* ===== CAPSIDS ===== */
+function createNode(x,y){
+    const n = document.createElement("div");
+    n.className = "node";
+    n.style.left = x+"px";
+    n.style.top = y+"px";
+    capsid.appendChild(n);
+}
+
+function createEdge(a,b){
+    const e = document.createElement("div");
+    e.className = "edge";
+
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+
+    const len = Math.sqrt(dx*dx+dy*dy);
+
+    e.style.width = len+"px";
+    e.style.left = a.x+"px";
+    e.style.top = a.y+"px";
+    e.style.transform = `rotate(${Math.atan2(dy,dx)}rad)`;
+
+    capsid.appendChild(e);
+}
+
 async function buildCapsid(){
+    capsid.innerHTML="";
+    capsid.style.opacity=1;
+    capsid.style.transform="translate(-50%,-50%) scale(1)";
 
-    capsid.innerHTML = "";
-    capsid.style.opacity = 1;
-    capsid.style.transform = "translate(-50%,-50%) scale(1)";
-
-    const points = [
-        [0,-40],[35,-20],[35,20],
-        [0,40],[-35,20],[-35,-20]
+    const pts = [
+        {x:60,y:20},{x:90,y:40},{x:90,y:80},
+        {x:60,y:100},{x:30,y:80},{x:30,y:40}
     ];
 
-    let nodes = [];
+    pts.forEach(p=>createNode(p.x,p.y));
 
-    for(let i=0;i<points.length;i++){
-        const n = document.createElement("div");
-        n.className = "node";
-        n.style.left = (60 + points[i][0]) + "px";
-        n.style.top = (60 + points[i][1]) + "px";
-        capsid.appendChild(n);
-        nodes.push(n);
-        await sleep(100);
-    }
-
-    for(let i=0;i<nodes.length;i++){
-        const a = nodes[i];
-        const b = nodes[(i+1)%nodes.length];
-
-        const e = document.createElement("div");
-        e.className = "edge";
-
-        const dx = b.offsetLeft - a.offsetLeft;
-        const dy = b.offsetTop - a.offsetTop;
-
-        const len = Math.sqrt(dx*dx + dy*dy);
-
-        e.style.width = len + "px";
-        e.style.left = a.offsetLeft + "px";
-        e.style.top = a.offsetTop + "px";
-        e.style.transform = `rotate(${Math.atan2(dy,dx)}rad)`;
-
-        capsid.appendChild(e);
-        await sleep(80);
+    for(let i=0;i<pts.length;i++){
+        createEdge(pts[i], pts[(i+1)%pts.length]);
+        await sleep(120);
     }
 }
 
-/* =========================
-   FLIGHT
-========================= */
-async function flyCapsid(){
-    capsid.style.transition = "all 1.8s ease-in-out";
-    capsid.style.transform = "translate(200px,-40px) scale(1.2)";
-    await sleep(1800);
-
-    capsid.style.transform = "translate(420px,20px) scale(1.4)";
-    await sleep(1800);
-}
-
-/* =========================
-   DOCK
-========================= */
-async function dock(){
-
-    ecoli.style.opacity = 1;
-    ecoli.style.transition = "all 0.8s ease";
-    ecoli.style.boxShadow = "0 0 60px #00ffcc";
-
-    capsid.style.transform = "translate(450px,40px) scale(1.5)";
+/* ===== VIRUS DOCK ===== */
+async function dockVirus(){
+    virusCore.style.opacity=1;
+    virusCore.style.transform="scale(1) translate(120px,10px)";
 
     await sleep(1200);
+
+    virusCore.style.transform="scale(1.2) translate(105px,5px)";
+    bacteria.style.opacity=1;
+    bacteria.style.borderColor="red";
 }
 
-/* =========================
-   IMPOSSIBLE ORGANELLE
-========================= */
-async function revealMito(){
+/* ===== MAIN ===== */
+async function startSimulation(){
 
-    ecoli.style.boxShadow = "0 0 120px red";
-    ecoli.style.filter = "contrast(1.5) brightness(1.3)";
+    const rna = document.getElementById("rnaInput").value;
 
-    await sleep(800);
+    if(!rna){
+        alert("Enter RNA first");
+        return;
+    }
 
-    mito.style.opacity = 1;
-    mito.style.transition = "all 1.2s ease";
-    mito.style.transform = "translate(-50%,-50%) scale(0.2)";
+    rnaDisplay.innerText="RNA LOADED: "+rna;
 
-    await sleep(700);
+    await sleep(500);
 
-    mito.style.transform = "translate(-50%,-50%) scale(1)";
-    mito.style.boxShadow = "0 0 80px orange";
+    await buildCapsid();
+    await dockVirus();
 
-    await sleep(700);
+    camera.style.transform="translateZ(-300px) scale(1.5)";
+    await sleep(1000);
 
-    mito.style.transform = "translate(-50%,-50%) scale(1.4)";
-    mito.style.boxShadow = "0 0 120px yellow,0 0 160px orange";
+    bacteria.style.background="radial-gradient(circle,#ff0044,#220000)";
+    bacteria.style.transform="scale(1.2)";
+
+    rnaDisplay.innerText="RESULT: HOST MODIFIED (HYPOTHETICAL SIMULATION)";
 }
+
 </script>
 
 </body>
