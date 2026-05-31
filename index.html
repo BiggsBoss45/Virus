@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GENESIS SIMULATION CORE - FIXED</title>
+<title>GENESIS SIMULATION CORE</title>
 
 <style>
 body{
@@ -13,12 +13,12 @@ body{
     color:#00ffcc;
 }
 
+/* ===== SPACE ===== */
 #space{
     position:relative;
     width:100vw;
     height:100vh;
     perspective:1200px;
-    overflow:hidden;
 }
 
 #camera{
@@ -29,86 +29,13 @@ body{
     transition: transform 2s ease-in-out;
 }
 
-.layer-back,.layer-mid,.layer-front{
-    position:absolute;
-    width:100%;
-    height:100%;
-}
-
-.layer-back{transform:translateZ(-600px) scale(2);opacity:0.25;}
-.layer-mid{transform:translateZ(-200px) scale(1.3);opacity:0.5;}
-
-.star,.particle{
-    position:absolute;
-    background:#00ffcc;
-    border-radius:50%;
-}
-
-.star{width:2px;height:2px;}
-.particle{width:6px;height:6px;opacity:0.2;}
-
-#virusCore{
-    width:70px;height:70px;
-    border-radius:50%;
-    position:absolute;
-    top:50%;left:40%;
-    transform:scale(0);
-    opacity:0;
-    background:radial-gradient(circle,#00ffcc,#003333);
-    box-shadow:0 0 25px #00ffcc;
-}
-
-#bacteria{
-    width:160px;height:160px;
-    border-radius:50%;
-    position:absolute;
-    top:50%;left:55%;
-    border:2px solid #00ffcc;
-    opacity:0;
-}
-
-#capsid{
-    position:absolute;
-    width:120px;height:120px;
-    top:50%;left:50%;
-    transform:translate(-50%,-50%) scale(0);
-    opacity:0;
-}
-
-.node{
-    position:absolute;
-    width:10px;height:10px;
-    border-radius:50%;
-    background:#00ffcc;
-}
-
-.edge{
-    position:absolute;
-    height:2px;
-    background:#00ffcc;
-    transform-origin:left center;
-}
-
+/* ===== UI ===== */
 #ui{
     position:absolute;
     top:20px;
     width:100%;
     text-align:center;
-    z-index:9999;
-    pointer-events:auto;
-}
-
-#ui input,
-#ui button{
-    pointer-events:auto;
-}
-
-#space{
-    pointer-events:none;
-}
-
-#space *{
-    pointer-events:none;
+    z-index:999;
 }
 
 input,button{
@@ -116,6 +43,7 @@ input,button{
     border:1px solid #00ffcc;
     color:#00ffcc;
     padding:10px;
+    font-family:monospace;
 }
 
 button:hover{
@@ -129,6 +57,88 @@ button:hover{
     width:100%;
     text-align:center;
 }
+
+/* ===== VIRUS ===== */
+#virusContainer{
+    position:absolute;
+    top:40%;
+    left:35%;
+    width:220px;
+    height:260px;
+    transform:scale(0);
+    opacity:0;
+    transition:all 1s ease;
+}
+
+#capsidShell{
+    width:100px;
+    height:100px;
+    position:absolute;
+    left:60px;
+    top:0;
+    clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+    border:2px solid #00ffcc;
+    box-shadow:0 0 20px #00ffcc;
+}
+
+#tailTube{
+    position:absolute;
+    width:20px;
+    height:70px;
+    left:100px;
+    top:100px;
+    border:2px solid #00ffcc;
+}
+
+#injector{
+    position:absolute;
+    width:4px;
+    height:0px;
+    left:108px;
+    top:170px;
+    background:#00ffcc;
+    box-shadow:0 0 10px #00ffcc;
+    transition:height 0.8s ease;
+}
+
+.leg{
+    position:absolute;
+    width:60px;
+    height:2px;
+    background:#00ffcc;
+    transform-origin:left;
+    top:150px;
+    left:110px;
+}
+
+.leg1{transform:rotate(20deg);}
+.leg2{transform:rotate(50deg);}
+.leg3{transform:rotate(80deg);}
+.leg4{transform:rotate(-20deg);}
+.leg5{transform:rotate(-50deg);}
+.leg6{transform:rotate(-80deg);}
+
+/* ===== BACTERIA ===== */
+#bacteria{
+    position:absolute;
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    border:2px solid #00ffcc;
+    top:50%;
+    left:60%;
+    transform:scale(0);
+    opacity:0;
+    transition:all 1s ease;
+}
+
+/* ===== RNA LETTERS ===== */
+.rnaChar{
+    position:absolute;
+    font-size:28px;
+    color:#00ffcc;
+    transition:all 1.5s ease;
+}
 </style>
 </head>
 
@@ -140,112 +150,154 @@ button:hover{
 </div>
 
 <div id="space">
-    <div id="camera">
-        <div class="layer-back" id="back"></div>
-        <div class="layer-mid" id="mid"></div>
+<div id="camera">
 
-        <div class="layer-front">
-            <div id="virusCore"></div>
-            <div id="bacteria"></div>
-            <div id="capsid"></div>
-        </div>
+    <div id="virusContainer">
+        <div id="capsidShell"></div>
+        <div id="tailTube"></div>
+        <div id="injector"></div>
+
+        <div class="leg leg1"></div>
+        <div class="leg leg2"></div>
+        <div class="leg leg3"></div>
+        <div class="leg leg4"></div>
+        <div class="leg leg5"></div>
+        <div class="leg leg6"></div>
     </div>
+
+    <div id="bacteria"></div>
+
+</div>
 </div>
 
 <div id="rnaDisplay"></div>
 
 <script>
 
-const camera = document.getElementById("camera");
-const virusCore = document.getElementById("virusCore");
+const CORRECT_RNA = "AUGGCUACGUUAGC";
+
+const virus = document.getElementById("virusContainer");
 const bacteria = document.getElementById("bacteria");
-const capsid = document.getElementById("capsid");
 const rnaDisplay = document.getElementById("rnaDisplay");
+const injector = document.getElementById("injector");
 
 function sleep(ms){
     return new Promise(r => setTimeout(r, ms));
 }
 
-/* ===== CAPSIDS ===== */
-function createNode(x,y){
-    const n = document.createElement("div");
-    n.className = "node";
-    n.style.left = x+"px";
-    n.style.top = y+"px";
-    capsid.appendChild(n);
+/* ===== VALIDATION ===== */
+function validateRNA(rna){
+
+    const clean = rna.toUpperCase().trim();
+
+    if(!/^[AUGC]+$/.test(clean)){
+        return {ok:false, msg:"INVALID RNA: ONLY A U G C ALLOWED"};
+    }
+
+    if(clean !== CORRECT_RNA){
+        return {ok:false, msg:"SEQUENCE REJECTED: GENESIS KEY NOT FOUND"};
+    }
+
+    return {ok:true, clean};
 }
 
-function createEdge(a,b){
-    const e = document.createElement("div");
-    e.className = "edge";
+/* ===== RNA → VIRUS ASSEMBLY ===== */
+async function assembleRNA(rna){
 
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
+    rnaDisplay.innerHTML = "";
 
-    const len = Math.sqrt(dx*dx+dy*dy);
+    const chars = [];
 
-    e.style.width = len+"px";
-    e.style.left = a.x+"px";
-    e.style.top = a.y+"px";
-    e.style.transform = `rotate(${Math.atan2(dy,dx)}rad)`;
+    for(let c of rna){
+        const span = document.createElement("div");
+        span.className = "rnaChar";
+        span.innerText = c;
 
-    capsid.appendChild(e);
-}
+        span.style.left = (Math.random()*80 + 10) + "%";
+        span.style.top = (Math.random()*60 + 20) + "%";
 
-async function buildCapsid(){
-    capsid.innerHTML="";
-    capsid.style.opacity=1;
-    capsid.style.transform="translate(-50%,-50%) scale(1)";
+        document.body.appendChild(span);
+        chars.push(span);
 
-    const pts = [
-        {x:60,y:20},{x:90,y:40},{x:90,y:80},
-        {x:60,y:100},{x:30,y:80},{x:30,y:40}
-    ];
-
-    pts.forEach(p=>createNode(p.x,p.y));
-
-    for(let i=0;i<pts.length;i++){
-        createEdge(pts[i], pts[(i+1)%pts.length]);
         await sleep(120);
     }
-}
 
-/* ===== VIRUS DOCK ===== */
-async function dockVirus(){
-    virusCore.style.opacity=1;
-    virusCore.style.transform="scale(1) translate(120px,10px)";
+    await sleep(800);
+
+    // pull into center
+    for(let c of chars){
+        c.style.left = "50%";
+        c.style.top = "45%";
+        c.style.transform = "translate(-50%,-50%) scale(0)";
+        c.style.opacity = "0";
+    }
 
     await sleep(1200);
 
-    virusCore.style.transform="scale(1.2) translate(105px,5px)";
-    bacteria.style.opacity=1;
-    bacteria.style.borderColor="red";
+    chars.forEach(c => c.remove());
+}
+
+/* ===== VIRUS BUILD ===== */
+async function buildVirus(){
+
+    virus.style.opacity = 1;
+    virus.style.transform = "scale(1)";
+
+    await sleep(800);
+
+    injector.style.height = "50px";
+
+    await sleep(500);
+}
+
+/* ===== INFECTION ===== */
+async function infect(){
+
+    bacteria.style.opacity = 1;
+    bacteria.style.transform = "scale(1)";
+
+    await sleep(800);
+
+    injector.style.height = "90px";
+
+    await sleep(800);
+
+    bacteria.style.borderColor = "red";
+    bacteria.style.boxShadow = "0 0 40px red";
+}
+
+/* ===== MITOCHONDRIA REVEAL ===== */
+async function mitochondriaReveal(){
+
+    bacteria.style.background =
+        "radial-gradient(circle,#ff0044,#220000)";
+
+    bacteria.style.transform = "scale(1.2)";
+
+    rnaDisplay.innerText =
+        "ANOMALY DETECTED: MITOCHONDRION FORMED INSIDE PROKARYOTE";
 }
 
 /* ===== MAIN ===== */
 async function startSimulation(){
 
-    const rna = document.getElementById("rnaInput").value;
+    const input = document.getElementById("rnaInput").value;
 
-    if(!rna){
-        alert("Enter RNA first");
+    const result = validateRNA(input);
+
+    if(!result.ok){
+        rnaDisplay.innerText = result.msg;
         return;
     }
 
-    rnaDisplay.innerText="RNA LOADED: "+rna;
+    rnaDisplay.innerText = "SEQUENCE ACCEPTED";
 
-    await sleep(500);
+    await sleep(800);
 
-    await buildCapsid();
-    await dockVirus();
-
-    camera.style.transform="translateZ(-300px) scale(1.5)";
-    await sleep(1000);
-
-    bacteria.style.background="radial-gradient(circle,#ff0044,#220000)";
-    bacteria.style.transform="scale(1.2)";
-
-    rnaDisplay.innerText="RESULT: HOST MODIFIED (HYPOTHETICAL SIMULATION)";
+    await assembleRNA(result.clean);
+    await buildVirus();
+    await infect();
+    await mitochondriaReveal();
 }
 
 </script>
