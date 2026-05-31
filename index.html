@@ -129,6 +129,18 @@ input,button{
     transition:height 0.6s ease;
 }
 
+#rnaPayload{
+    position:absolute;
+    top:20px;
+    left:50%;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#7fffd4;
+    transform:translateX(-50%);
+    opacity:0;
+    box-shadow:0 0 10px #7fffd4;
+}
 /* fibers */
 .fiber{
     position:absolute;
@@ -170,6 +182,7 @@ input,button{
         <div id="capsidShell"></div>
         <div id="tailTube"></div>
         <div id="injector"></div>
+        <div id="rnaPayload"></div>
 
         <div class="fiber f1"></div>
         <div class="fiber f2"></div>
@@ -198,6 +211,8 @@ const bacteria = document.getElementById("bacteria");
 const logBox = document.getElementById("log");
 const camera = document.getElementById("camera");
 
+const rnaPayload = document.getElementById("rnaPayload");
+
 function sleep(ms){
     return new Promise(r => setTimeout(r, ms));
 }
@@ -218,93 +233,95 @@ function validateRNA(rna){
 }
 
 /* =========================
-   CAMERA ZOOM IN
+   CAMERA ZOOM
 ========================= */
 async function zoomIn(){
-    camera.style.transform = "translateZ(-200px) scale(1.6)";
+    camera.style.transform = "translateZ(-220px) scale(1.7)";
     await sleep(900);
 }
 
 /* =========================
-   RNA EFFECT
+   RNA VISUALIZATION (OUTSIDE)
 ========================= */
 async function renderRNA(rna){
 
-    logBox.innerText = "RNA FRAGMENT DETECTED...";
+    logBox.innerText = "RNA FRAGMENT SCANNED...";
 
-    for(let c of rna){
-        const el = document.createElement("div");
-        el.className = "rnaChar";
-        el.innerText = c;
-
-        el.style.left = (40 + Math.random()*20) + "%";
-        el.style.top = (35 + Math.random()*20) + "%";
-
-        document.body.appendChild(el);
-        await sleep(40);
-    }
-
-    await sleep(700);
-
-    document.querySelectorAll(".rnaChar").forEach(e=>{
-        e.style.left = "50%";
-        e.style.top = "45%";
-        e.style.opacity = "0";
-    });
-
-    await sleep(900);
-
-    document.querySelectorAll(".rnaChar").forEach(e=>e.remove());
+    await sleep(400);
 }
 
 /* =========================
-   PHAGE DESCENDS FROM TOP
+   PHAGE DESCENDS
 ========================= */
 async function spawnPhage(){
 
-    logBox.innerText = "BACTERIOPHAGE APPROACHING FROM ABOVE...";
+    logBox.innerText = "BACTERIOPHAGE DESCENDING...";
 
     virus.style.opacity = 1;
     virus.style.transform = "translateX(-50%) scale(0.7)";
-    virus.style.top = "10%";
+    virus.style.top = "12%";
 
-    await sleep(800);
+    await sleep(900);
 
-    virus.style.top = "38%"; // move down toward E.coli
+    virus.style.top = "40%";
 
     await sleep(900);
 }
 
 /* =========================
-   INJECTION (SYRINGE DOWNWARD)
+   INJECTION + RNA RELEASE
 ========================= */
 async function inject(){
 
     logBox.innerText = "TAIL FIBERS DOCKING...";
 
-    await sleep(600);
+    await sleep(500);
 
-    logBox.innerText = "INJECTOR EXTENDING...";
+    logBox.innerText = "INJECTOR ACTIVATED...";
 
     document.getElementById("injector").style.height = "90px";
 
-    bacteria.style.boxShadow = "0 0 40px #ff0033";
-    bacteria.style.transform = "translate(-50%,-50%) scale(0.95)";
+    /* CREATE RNA PAYLOAD */
+    rnaPayload.style.opacity = 1;
+
+    /* start inside virus */
+    rnaPayload.style.top = "30px";
+
+    await sleep(500);
+
+    logBox.innerText = "RNA TRANSFER INITIATED";
+
+    /* MOVE RNA DOWN INTO CELL */
+    rnaPayload.style.transition = "all 1.5s ease-in-out";
+    rnaPayload.style.top = "170px";   // into cell body
+    rnaPayload.style.left = "50%";
+
+    await sleep(1500);
+
+    /* ENTER NUCLEOID TARGET */
+    rnaPayload.style.top = "60px";
+    rnaPayload.style.left = "45%";
+    rnaPayload.style.background = "#ff0033";
+    rnaPayload.style.boxShadow = "0 0 15px #ff0033";
 
     await sleep(1000);
+
+    logBox.innerText = "RNA INTEGRATED INTO HOST NUCLEOID";
 }
 
 /* =========================
-   MUTATION REVEAL
+   MUTATION
 ========================= */
 async function mutate(){
 
     logBox.innerText = "HOST REPROGRAMMING...";
 
-    await sleep(800);
+    await sleep(700);
 
     bacteria.style.background =
         "radial-gradient(circle,#ff0033,#220000)";
+
+    bacteria.style.boxShadow = "0 0 60px #ff0033";
 
     await sleep(700);
 
