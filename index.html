@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GENESIS SIMULATION CORE - 3D SPACE</title>
+<title>GENESIS SIMULATION CORE</title>
 
 <style>
 body{
@@ -13,13 +13,11 @@ body{
     color:#00ffcc;
 }
 
-/* 3D SPACE */
 #space{
     position:relative;
     width:100vw;
     height:100vh;
     perspective:1200px;
-    overflow:hidden;
 }
 
 #camera{
@@ -31,71 +29,25 @@ body{
 }
 
 /* BACKGROUND */
-.layer-back{
-    position:absolute;
-    width:100%;
-    height:100%;
-    transform:translateZ(-600px) scale(2);
-    opacity:0.25;
-}
-
-.star{
-    position:absolute;
-    width:2px;
-    height:2px;
-    background:#00ffcc;
-}
-
-/* MID */
-.layer-mid{
-    position:absolute;
-    width:100%;
-    height:100%;
-    transform:translateZ(-200px) scale(1.3);
-    opacity:0.5;
-}
-
-.particle{
-    position:absolute;
-    width:6px;
-    height:6px;
-    border-radius:50%;
-    background:#00ffcc;
-    opacity:0.2;
-}
-
-/* FRONT */
-.layer-front{
+.layer{
     position:absolute;
     width:100%;
     height:100%;
 }
 
-/* VIRUS */
-#virusCore{
-    width:70px;
-    height:70px;
-    border-radius:50%;
-    position:absolute;
-    top:50%;
-    left:40%;
-    transform:scale(0);
-    opacity:0;
-    background:radial-gradient(circle,#00ffcc,#003333);
-    box-shadow:0 0 25px #00ffcc;
-}
-
-/* BACTERIA */
-#bacteria{
-    width:160px;
-    height:160px;
+/* E. COLI CELL */
+#ecoli{
+    width:180px;
+    height:180px;
     border-radius:50%;
     border:2px solid #00ffcc;
     position:absolute;
     top:50%;
-    left:55%;
-    opacity:0;
+    left:60%;
+    transform:translate(-50%,-50%);
     box-shadow:0 0 10px #00ffcc;
+    opacity:0;
+    overflow:hidden;
 }
 
 /* CAPSID */
@@ -104,11 +56,12 @@ body{
     width:120px;
     height:120px;
     top:50%;
-    left:50%;
+    left:30%;
     transform:translate(-50%,-50%) scale(0);
-    opacity:0;
+    opacity:1;
 }
 
+/* NODE + EDGE */
 .node{
     position:absolute;
     width:10px;
@@ -124,69 +77,69 @@ body{
     transform-origin:left center;
 }
 
-#rnaChain{
+/* MITOCHONDRIA (IMPOSSIBLE ORGANELLE) */
+.mito{
     position:absolute;
-    width:100%;
-    text-align:center;
-    top:45%;
+    width:50px;
+    height:25px;
+    border-radius:50%;
+    background:radial-gradient(circle,#ffcc00,#ff6600);
+    box-shadow:0 0 40px orange;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0);
     opacity:0;
 }
 
-input, button{
+#ui{
+    position:absolute;
+    top:10px;
+    width:100%;
+    text-align:center;
+}
+
+input,button{
     background:black;
     border:1px solid #00ffcc;
     color:#00ffcc;
-    padding:10px;
+    padding:8px;
 }
 </style>
 </head>
 
 <body>
 
+<div id="ui">
+<input id="rnaInput" placeholder="RNA sequence">
+<button onclick="start()">RUN</button>
+</div>
+
 <div id="space">
 <div id="camera">
 
-<div class="layer-back" id="back"></div>
-<div class="layer-mid" id="mid"></div>
-
-<div class="layer-front">
-
-<div id="virusCore"></div>
-<div id="bacteria"></div>
 <div id="capsid"></div>
-<div id="rnaChain"></div>
-
+<div id="ecoli">
+    <div class="mito" id="mito"></div>
 </div>
 
 </div>
-</div>
-
-<div style="position:absolute;top:10px;width:100%;text-align:center;">
-<input id="rnaInput" placeholder="Enter RNA">
-<button onclick="startSimulation()">GENERATE</button>
 </div>
 
 <script>
 
-const virusCore = document.getElementById("virusCore");
-const bacteria = document.getElementById("bacteria");
 const capsid = document.getElementById("capsid");
-const rnaChain = document.getElementById("rnaChain");
+const ecoli = document.getElementById("ecoli");
+const mito = document.getElementById("mito");
 const camera = document.getElementById("camera");
 
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-/* ===== CAPSID BUILD ===== */
-async function buildCapsid(rna){
+/* =========================
+   CAPSID CONSTRUCTION
+========================= */
+async function buildCapsid(){
 
-    rnaChain.innerText = "RNA: " + rna;
-    rnaChain.style.opacity = 1;
-
-    await sleep(800);
-
-    rnaChain.style.opacity = 0;
-
-    capsid.style.opacity = 1;
+    capsid.innerHTML = "";
     capsid.style.transform = "translate(-50%,-50%) scale(1)";
 
     const points = [
@@ -199,58 +152,112 @@ async function buildCapsid(rna){
     for(let i=0;i<points.length;i++){
         const n = document.createElement("div");
         n.className="node";
-        n.style.left = (60+points[i][0])+"px";
-        n.style.top = (60+points[i][1])+"px";
+        n.style.left = (60 + points[i][0])+"px";
+        n.style.top = (60 + points[i][1])+"px";
         capsid.appendChild(n);
         nodes.push(n);
-        await sleep(150);
+        await sleep(120);
     }
 
-    return true;
+    for(let i=0;i<nodes.length;i++){
+        const a = nodes[i];
+        const b = nodes[(i+1)%nodes.length];
+
+        const e = document.createElement("div");
+        e.className="edge";
+
+        const dx = b.offsetLeft - a.offsetLeft;
+        const dy = b.offsetTop - a.offsetTop;
+
+        const len = Math.sqrt(dx*dx + dy*dy);
+
+        e.style.width = len+"px";
+        e.style.left = a.offsetLeft+"px";
+        e.style.top = a.offsetTop+"px";
+        e.style.transform = `rotate(${Math.atan2(dy,dx)}rad)`;
+
+        capsid.appendChild(e);
+
+        await sleep(80);
+    }
 }
 
-/* ===== DOCK ANIMATION ===== */
-async function dockVirus(){
+/* =========================
+   FLIGHT
+========================= */
+async function flyCapsid(){
+    capsid.style.transition = "all 2s ease";
+    capsid.style.transform = "translate(200px,-40px) scale(1.2)";
+    await sleep(2000);
 
-    virusCore.style.opacity = 1;
-    virusCore.style.transform = "scale(1)";
-
-    virusCore.style.transition = "all 2s ease";
-    virusCore.style.transform = "translate(120px,10px) scale(1.1)";
-    await sleep(1500);
-
-    virusCore.style.transform = "translate(100px,-10px) scale(1.05)";
-    await sleep(600);
-
-    virusCore.style.transform = "translate(105px,5px) scale(1.25)";
-
-    bacteria.style.opacity = 1;
-    bacteria.style.boxShadow = "0 0 80px red";
-
-    await sleep(500);
+    capsid.style.transform = "translate(420px,20px) scale(1.4)";
+    await sleep(2000);
 }
 
-/* ===== MAIN ===== */
-async function startSimulation(){
+/* =========================
+   DOCKING
+========================= */
+async function dock(){
+
+    ecoli.style.opacity = 1;
+
+    ecoli.style.transition = "all 0.8s ease";
+    ecoli.style.boxShadow = "0 0 60px #00ffcc";
+    ecoli.style.transform = "translate(-50%,-50%) scale(1.05)";
+
+    capsid.style.transform = "translate(450px,40px) scale(1.5)";
+
+    await sleep(1200);
+}
+
+/* =========================
+   IMPOSSIBLE MITOCHONDRIA REVEAL
+========================= */
+async function revealMito(){
+
+    ecoli.style.filter = "contrast(1.5) brightness(1.3)";
+    ecoli.style.boxShadow = "0 0 100px red";
+
+    await sleep(800);
+
+    mito.style.opacity = 1;
+    mito.style.transition = "all 1.2s ease";
+    mito.style.transform = "translate(-50%,-50%) scale(0.2)";
+
+    await sleep(800);
+
+    mito.style.transform = "translate(-50%,-50%) scale(1)";
+    mito.style.boxShadow = "0 0 80px orange";
+
+    await sleep(800);
+
+    mito.style.transform = "translate(-50%,-50%) scale(1.4)";
+    mito.style.boxShadow = "0 0 120px yellow,0 0 160px orange";
+
+    ecoli.style.boxShadow = "0 0 140px white";
+}
+
+/* =========================
+   MASTER SEQUENCE
+========================= */
+async function start(){
 
     const rna = document.getElementById("rnaInput").value;
     if(!rna) return alert("Enter RNA");
 
-    camera.style.transform = "translateZ(0px) scale(1)";
+    camera.style.transform = "scale(1)";
 
-    await buildCapsid(rna);
-    await dockVirus();
+    await buildCapsid();
+    await flyCapsid();
+    await dock();
 
-    camera.style.transform = "translateZ(-300px) scale(1.8)";
+    await sleep(800); // suspense pause
 
-    bacteria.style.background = "radial-gradient(circle,#ff0044,#220000)";
-    bacteria.style.transform = "scale(1.2)";
+    await revealMito();
 
-    document.body.insertAdjacentHTML("beforeend",
-      `<div style="position:absolute;bottom:20px;width:100%;text-align:center;color:#00ffcc">
-        HOST MODIFICATION COMPLETE
-      </div>`
-    );
+    camera.style.transform = "scale(1.6)";
+
+    console.log("Simulation complete");
 }
 
 </script>
