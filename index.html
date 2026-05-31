@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GENESIS SIMULATION CORE</title>
+<title>GENESIS SIMULATION CORE - FIXED</title>
 
 <style>
 body{
@@ -13,29 +13,13 @@ body{
     color:#00ffcc;
 }
 
-/* ===== SPACE ===== */
-#space{
-    position:relative;
-    width:100vw;
-    height:100vh;
-    perspective:1200px;
-}
-
-#camera{
-    position:absolute;
-    width:100%;
-    height:100%;
-    transform-style:preserve-3d;
-    transition: transform 2s ease-in-out;
-}
-
-/* ===== UI ===== */
+/* UI */
 #ui{
     position:absolute;
     top:20px;
     width:100%;
     text-align:center;
-    z-index:999;
+    z-index:10;
 }
 
 input,button{
@@ -51,14 +35,31 @@ button:hover{
     color:black;
 }
 
-#rnaDisplay{
+#log{
     position:absolute;
     bottom:20px;
     width:100%;
     text-align:center;
+    color:#00ffcc;
 }
 
-/* ===== VIRUS ===== */
+/* SPACE */
+#space{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    perspective:1200px;
+}
+
+#camera{
+    position:absolute;
+    width:100%;
+    height:100%;
+    transform-style:preserve-3d;
+    transition: transform 2s ease-in-out;
+}
+
+/* VIRUS */
 #virusContainer{
     position:absolute;
     top:40%;
@@ -97,28 +98,20 @@ button:hover{
     left:108px;
     top:170px;
     background:#00ffcc;
-    box-shadow:0 0 10px #00ffcc;
     transition:height 0.8s ease;
 }
 
+/* legs */
 .leg{
     position:absolute;
     width:60px;
     height:2px;
     background:#00ffcc;
-    transform-origin:left;
     top:150px;
     left:110px;
 }
 
-.leg1{transform:rotate(20deg);}
-.leg2{transform:rotate(50deg);}
-.leg3{transform:rotate(80deg);}
-.leg4{transform:rotate(-20deg);}
-.leg5{transform:rotate(-50deg);}
-.leg6{transform:rotate(-80deg);}
-
-/* ===== BACTERIA ===== */
+/* BACTERIA */
 #bacteria{
     position:absolute;
     width:180px;
@@ -131,13 +124,6 @@ button:hover{
     opacity:0;
     transition:all 1s ease;
 }
-
-/* ===== RNA LETTERS ===== */
-.rnaChar{
-    font-size: 24px;
-    color: #00ffcc;
-    transition: all 1s ease;
-}
 </style>
 </head>
 
@@ -145,168 +131,74 @@ button:hover{
 
 <div id="ui">
     <input id="rnaInput" placeholder="Enter RNA sequence">
-    <button onclick="startSimulation()">GENERATE</button>
+    <button id="runBtn">GENERATE</button>
 </div>
 
 <div id="space">
-<div id="camera">
+    <div id="camera">
 
-    <div id="virusContainer">
-        <div id="capsidShell"></div>
-        <div id="tailTube"></div>
-        <div id="injector"></div>
+        <div id="virusContainer">
+            <div id="capsidShell"></div>
+            <div id="tailTube"></div>
+            <div id="injector"></div>
 
-        <div class="leg leg1"></div>
-        <div class="leg leg2"></div>
-        <div class="leg leg3"></div>
-        <div class="leg leg4"></div>
-        <div class="leg leg5"></div>
-        <div class="leg leg6"></div>
+            <div class="leg"></div>
+            <div class="leg"></div>
+            <div class="leg"></div>
+            <div class="leg"></div>
+            <div class="leg"></div>
+            <div class="leg"></div>
+        </div>
+
+        <div id="bacteria"></div>
+
     </div>
-
-    <div id="bacteria"></div>
-
-</div>
 </div>
 
-<div id="rnaDisplay"></div>
+<div id="log">Awaiting sequence...</div>
 
 <script>
+
+const CORRECT_RNA = "AUGCGAUCGUAACGUGCUAUGCGA";
 
 const runBtn = document.getElementById("runBtn");
 const rnaInput = document.getElementById("rnaInput");
 
-const rnaLayer = document.getElementById("viralRNA");
-const phage = document.getElementById("phage");
-const ecoli = document.getElementById("ecoli");
-const logBox = document.getElementById("simulationLog");
-
-const needle = document.querySelector(".tailNeedle");
-const sheath = document.querySelector(".tailSheath");
-
-const CORRECT_RNA = "AUGCGAUCGUAACGUGCUAUGCGA";
+const virus = document.getElementById("virusContainer");
+const bacteria = document.getElementById("bacteria");
+const injector = document.getElementById("injector");
+const logBox = document.getElementById("log");
 
 function sleep(ms){
     return new Promise(r => setTimeout(r, ms));
 }
 
 /* =========================
-   VALIDATION
+   RNA VALIDATION
 ========================= */
 function validateRNA(rna){
 
     const clean = rna.toUpperCase().trim();
 
+    if(!clean){
+        return {ok:false, msg:"EMPTY SEQUENCE"};
+    }
+
     if(!/^[AUGC]+$/.test(clean)){
-        return {ok:false, msg:"ERROR: INVALID RNA BASES DETECTED"};
+        return {ok:false, msg:"INVALID BASES (ONLY A U G C ALLOWED)"};
     }
 
     if(clean !== CORRECT_RNA){
-        return {ok:false, msg:"SEQUENCE REJECTED: GENESIS KEY NOT FOUND"};
+        return {ok:false, msg:"SEQUENCE REJECTED"};
     }
 
     return {ok:true, clean};
 }
 
 /* =========================
-   RNA → ENERGY PARTICLES
+   MAIN ANIMATION
 ========================= */
-async function renderRNA(rna){
-
-    rnaLayer.innerHTML = "";
-    rnaLayer.style.opacity = 1;
-
-    const chars = [];
-
-    for(let c of rna){
-        const span = document.createElement("span");
-        span.className = "rnaChar";
-        span.innerText = c;
-
-        span.style.position = "absolute";
-        span.style.left = Math.random()*80 + "%";
-        span.style.top = Math.random()*60 + "%";
-
-        rnaLayer.appendChild(span);
-        chars.push(span);
-
-        await sleep(60);
-    }
-
-    await sleep(600);
-
-    for(let s of chars){
-        s.style.left = "50%";
-        s.style.top = "45%";
-        s.style.transform = "translate(-50%,-50%) scale(0)";
-        s.style.opacity = "0";
-    }
-
-    await sleep(900);
-    rnaLayer.innerHTML = "";
-}
-
-/* =========================
-   PHAGE ASSEMBLY
-========================= */
-async function assemblePhage(){
-
-    logBox.innerText = "PHAGE STRUCTURE ASSEMBLING...";
-
-    phage.style.opacity = 1;
-    phage.style.transform = "scale(1)";
-
-    await sleep(900);
-
-    logBox.innerText = "TAIL SYSTEM INITIALIZED";
-}
-
-/* =========================
-   INJECTION SEQUENCE
-========================= */
-async function inject(){
-
-    logBox.innerText = "DOCKING ONTO E.COLI...";
-
-    ecoli.style.opacity = 1;
-
-    await sleep(700);
-
-    sheath.style.transform = "scaleY(1.4)";
-    await sleep(500);
-
-    needle.style.height = "120px";
-
-    ecoli.style.boxShadow = "0 0 40px red";
-    ecoli.style.transform = "scale(1.05)";
-
-    await sleep(800);
-}
-
-/* =========================
-   MUTATION EVENT
-========================= */
-async function mutate(){
-
-    logBox.innerText = "HOST GENOME COMPROMISED...";
-
-    await sleep(700);
-
-    ecoli.style.background =
-        "radial-gradient(circle,#ff0044,#220000)";
-
-    ecoli.style.borderColor = "red";
-
-    await sleep(700);
-
-    logBox.innerText =
-        "ANOMALY DETECTED: MITOCHONDRIAL STRUCTURE FORMED INSIDE PROKARYOTE";
-}
-
-/* =========================
-   MAIN PIPELINE
-========================= */
-runBtn.onclick = async () => {
+async function run(){
 
     const result = validateRNA(rnaInput.value);
 
@@ -317,13 +209,42 @@ runBtn.onclick = async () => {
 
     logBox.innerText = "SEQUENCE ACCEPTED";
 
-    await sleep(600);
+    await sleep(800);
 
-    await renderRNA(result.clean);
-    await assemblePhage();
-    await inject();
-    await mutate();
-};
+    /* virus appears */
+    virus.style.opacity = 1;
+    virus.style.transform = "scale(1)";
+
+    logBox.innerText = "VIRUS ASSEMBLING...";
+
+    await sleep(1000);
+
+    /* dock */
+    virus.style.left = "45%";
+    virus.style.top = "45%";
+
+    await sleep(1000);
+
+    /* inject */
+    injector.style.height = "120px";
+    bacteria.style.opacity = 1;
+    bacteria.style.transform = "scale(1.1)";
+    bacteria.style.borderColor = "red";
+
+    logBox.innerText = "INJECTION EVENT";
+
+    await sleep(1000);
+
+    /* mutation */
+    bacteria.style.background =
+        "radial-gradient(circle,#ff0044,#220000)";
+
+    logBox.innerText =
+        "HOST MODIFIED: MITOCHONDRIAL-LIKE STRUCTURE FORMED";
+}
+
+/* BUTTON FIX */
+runBtn.addEventListener("click", run);
 
 </script>
 
