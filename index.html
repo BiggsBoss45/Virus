@@ -91,8 +91,24 @@ body{
 
 #ui{
     position:absolute;
-    top:20px;width:100%;
+    top:20px;
+    width:100%;
     text-align:center;
+    z-index:9999;
+    pointer-events:auto;
+}
+
+#ui input,
+#ui button{
+    pointer-events:auto;
+}
+
+#space{
+    pointer-events:none;
+}
+
+#space *{
+    pointer-events:none;
 }
 
 input,button{
