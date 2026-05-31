@@ -159,6 +159,19 @@ input,button{
     transition:all 1.2s ease-in-out;
 }
 
+#organismPanel{
+    position:absolute;
+    top:70px;
+    width:100%;
+    text-align:center;
+    color:#7fffd4;
+}
+
+#organismPrompt{
+    margin-bottom:10px;
+    font-size:18px;
+}
+
 /* fibers */
 .fiber{
     position:absolute;
@@ -191,6 +204,14 @@ input,button{
 <div id="ui">
     <input id="rnaInput" placeholder="Enter RNA sequence">
     <button id="runBtn">GENERATE</button>
+</div>
+
+<button id="identifyBtn">IDENTIFY NEW ORGANISM</button>
+
+<div id="organismPanel" style="display:none; margin-top:10px;">
+    <div id="organismPrompt">Enterobacteria ————</div>
+    <input id="organismInput" placeholder="Enter classification">
+    <button id="submitOrg">SUBMIT</button>
 </div>
 
 <div id="space">
@@ -235,7 +256,13 @@ const DOCK_Y = "52%";  // aligns with top of your E. coli body
 const rnaPayload = document.getElementById("rnaPayload");
 const mito = document.getElementById("mitochondria");
 
+const identifyBtn = document.getElementById("identifyBtn");
+const organismPanel = document.getElementById("organismPanel");
+const organismInput = document.getElementById("organismInput");
+const submitOrg = document.getElementById("submitOrg");
+const log = document.getElementById("log");
 function sleep(ms){
+    
     return new Promise(r => setTimeout(r, ms));
 }
 
@@ -263,6 +290,32 @@ function validateRNA(rna){
     return {ok:true, clean};
 }
 
+function showOrganismImage(){
+
+    const img = document.createElement("img");
+
+    img.src = "Genesis.jpg";
+    img.style.position = "absolute";
+    img.style.top = "50%";
+    img.style.left = "50%";
+    img.style.transform = "translate(-50%,-50%) scale(0)";
+    img.style.transition = "all 1.5s ease";
+    img.style.maxWidth = "60%";
+img.style.opacity = "0";
+img.style.boxShadow = "0 0 40px #7fffd4";
+
+    document.getElementById("space").style.display = "none";
+document.getElementById("ui").style.display = "none";
+
+document.body.appendChild(img);
+
+    setTimeout(() => {
+        img.style.transform =
+    "translate(-50%,-50%) scale(1)";
+
+img.style.opacity = "1";
+    }, 100);
+}
 /* CAMERA */
 async function zoom(){
     camera.style.transform = "translateZ(-250px) scale(1.6)";
@@ -364,6 +417,25 @@ runBtn.onclick = async () => {
     await assembleRNA();
     await inject();
     await mitoRise();
+};
+
+identifyBtn.onclick = () => {
+    organismPanel.style.display = "block";
+    logBox.innerText = "CLASSIFICATION REQUIRED: UNKNOWN ORGANISM DETECTED";
+};
+
+submitOrg.onclick = () => {
+
+    const answer = organismInput.value.trim().toLowerCase();
+
+    if(answer === "genesis"){
+
+        logBox.innerText = "CLASSIFICATION ACCEPTED";
+
+        showOrganismImage();
+    } else {
+        logBox.innerText = "INCORRECT CLASSIFICATION";
+    }
 };
 </script>
 
