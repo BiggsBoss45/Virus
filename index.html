@@ -1,125 +1,251 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>VIRUS SIMULATOR</title>
+<meta charset="UTF-8">
+<title>VIRUS SIMULATION CORE</title>
 
 <style>
-body {
+body{
     margin:0;
     background:black;
     color:#00ffcc;
     font-family:monospace;
-    text-align:center;
+    overflow:hidden;
 }
 
-.screen {
-    display:none;
-    padding:40px;
-}
+/* =========================
+   GLOBAL LAYERS
+========================= */
 
-.active {
-    display:block;
-}
-
-#virus {
-    margin-top:40px;
-    font-size:20px;
-    letter-spacing:4px;
+.screen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
     opacity:0;
+    pointer-events:none;
+    transition:2s ease;
+}
+
+.active{
+    opacity:1;
+    pointer-events:auto;
+}
+
+/* =========================
+   CINEMATIC BACKDROP
+========================= */
+
+#bgGlow{
+    position:absolute;
+    inset:0;
+    background:
+        radial-gradient(circle at center, rgba(0,255,200,0.08), transparent 60%),
+        radial-gradient(circle at top, rgba(0,255,200,0.05), transparent 70%);
+    animation:pulse 6s infinite alternate;
+}
+
+@keyframes pulse{
+    from{ transform:scale(1); opacity:0.5;}
+    to{ transform:scale(1.1); opacity:1;}
+}
+
+/* =========================
+   RNA VISUAL
+========================= */
+
+#rna{
+    font-size:18px;
+    letter-spacing:6px;
+    opacity:0;
+    transform:scale(0.8);
+    transition:3s ease;
+}
+
+.rnaActive{
+    opacity:1;
+    transform:scale(1.2);
+    text-shadow:0 0 15px #00ffcc;
+}
+
+/* =========================
+   VIRUS CORE
+========================= */
+
+#virusCore{
+    width:120px;
+    height:120px;
+    border:2px solid #00ffcc;
+    border-radius:50%;
+    margin-top:30px;
+    opacity:0;
+    transform:scale(0.5);
+    transition:3s ease;
+    box-shadow:0 0 0px #00ffcc;
+}
+
+.coreActive{
+    opacity:1;
+    transform:scale(1.4);
+    box-shadow:0 0 40px #00ffcc;
+}
+
+/* infection pulse */
+.infect{
+    animation:infectPulse 1s infinite alternate;
+}
+
+@keyframes infectPulse{
+    from{ filter:hue-rotate(0deg) brightness(1);}
+    to{ filter:hue-rotate(120deg) brightness(1.5);}
+}
+
+/* =========================
+   TEXT CINEMA
+========================= */
+
+h1{
+    text-shadow:0 0 20px #00ffcc;
+    letter-spacing:3px;
+}
+
+.fadeText{
+    opacity:0;
+    transform:translateY(20px);
     transition:2s;
 }
 
-.glow {
+.showText{
     opacity:1;
-    text-shadow:0 0 10px #00ffcc;
+    transform:translateY(0);
 }
 
-button, input {
+/* INPUT */
+input, button{
     background:black;
-    color:#00ffcc;
     border:1px solid #00ffcc;
+    color:#00ffcc;
     padding:10px;
-    margin:10px;
     font-family:monospace;
+    margin-top:10px;
+}
+
+button:hover{
+    background:#00ffcc;
+    color:black;
 }
 </style>
 </head>
 
 <body>
 
+<div id="bgGlow"></div>
+
 <!-- RNA INPUT -->
 <div id="screen1" class="screen active">
-    <h1>RNA SEQUENCE INPUT</h1>
+    <h1>RNA INPUT REQUIRED</h1>
     <input id="rnaInput" placeholder="Paste RNA sequence">
-    <br>
-    <button onclick="checkRNA()">SUBMIT</button>
+    <button onclick="startSequence()">INITIALIZE</button>
 </div>
 
-<!-- VIRUS BUILD -->
+<!-- BUILD -->
 <div id="screen2" class="screen">
-    <h1>ASSEMBLING VIRUS...</h1>
-    <div id="virus">AUGCGAUCGUAACGUGCUAUGCGA</div>
+    <h1 class="fadeText" id="t1">SEQUENCE ACCEPTED</h1>
+    <div id="rna">AUGCGAUCGUAACGUGCUAUGCGA</div>
+    <div id="virusCore"></div>
 </div>
 
 <!-- INFECTION -->
 <div id="screen3" class="screen">
-    <h1>INFECTION IN PROGRESS</h1>
-    <p>Bacteria compromised...</p>
+    <h1 class="fadeText" id="t2">INFECTION EVENT DETECTED</h1>
+    <p class="fadeText" id="t3">HOST: E. COLI // STATUS: COMPROMISED</p>
 </div>
 
 <!-- NAME -->
 <div id="screen4" class="screen">
-    <h1>ENTER FINAL NAME</h1>
+    <h1>ENTITY FORMATION</h1>
     <p>ENTERBACTERIA ________</p>
     <input id="nameInput">
-    <button onclick="checkName()">VERIFY</button>
+    <button onclick="checkName()">CONFIRM</button>
 </div>
 
 <!-- FINAL -->
 <div id="screen5" class="screen">
-    <h1>ENTEROBACTERIA GENESIS</h1>
-    <button onclick="generate()">GENERATE IMAGE</button>
-    <div id="finalVisual"></div>
+    <h1 id="finalName">ENTEROBACTERIA GENESIS</h1>
+    <p class="fadeText" id="finalText">SYSTEM CREATION COMPLETE</p>
 </div>
 
 <script>
 
 const correctRNA = "AUGCGAUCGUAACGUGCUAUGCGA";
 
-function showScreen(id){
+function show(id){
     document.querySelectorAll(".screen")
     .forEach(s => s.classList.remove("active"));
 
     document.getElementById(id).classList.add("active");
 }
 
-function checkRNA(){
+/* =========================
+   CINEMATIC START
+========================= */
+
+function startSequence(){
+
     const val = document.getElementById("rnaInput").value.trim();
 
-    if(val === correctRNA){
-        showScreen("screen2");
+    if(val !== correctRNA) return;
 
-        setTimeout(() => {
-            document.getElementById("virus").classList.add("glow");
-        }, 1000);
+    show("screen2");
 
-        setTimeout(() => {
-            showScreen("screen3");
-        }, 4000);
-    }
+    // TEXT FADE IN
+    setTimeout(() => {
+        document.getElementById("t1").classList.add("showText");
+    }, 800);
+
+    // RNA REVEAL
+    setTimeout(() => {
+        document.getElementById("rna").classList.add("rnaActive");
+    }, 1500);
+
+    // VIRUS BUILD
+    setTimeout(() => {
+        document.getElementById("virusCore").classList.add("coreActive");
+    }, 2500);
+
+    // INFECTION SHIFT
+    setTimeout(() => {
+        show("screen3");
+    }, 5500);
+
+    setTimeout(() => {
+        document.getElementById("t2").classList.add("showText");
+        document.getElementById("t3").classList.add("showText");
+    }, 6000);
+
+    // MOVE TO NAME
+    setTimeout(() => {
+        show("screen4");
+    }, 9000);
 }
 
+/* =========================
+   NAME CHECK
+========================= */
+
 function checkName(){
+
     const val = document.getElementById("nameInput").value.trim().toLowerCase();
 
     if(val === "genesis"){
-        showScreen("screen5");
-    }
-}
+        show("screen5");
 
-function generate(){
-    document.getElementById("finalVisual").innerHTML =
-        "🧬 ENTEROBACTERIA GENESIS CREATED";
+        setTimeout(() => {
+            document.getElementById("finalText").classList.add("showText");
+        }, 1000);
+    }
 }
 
 </script>
