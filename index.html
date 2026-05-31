@@ -34,7 +34,6 @@ input,button{
     position:absolute;
     bottom:15px;
     width:100%;
-    width:100%;
     text-align:center;
 }
 
@@ -75,7 +74,7 @@ input,button{
     overflow:hidden;
 }
 
-/* NUCLEOID */
+/* nucleoid */
 #nucleoid{
     position:absolute;
     width:120px;
@@ -87,18 +86,33 @@ input,button{
     filter:blur(1px);
 }
 
+/* MITOCHONDRIA */
+#mitochondria{
+    position:absolute;
+    width:80px;
+    height:40px;
+    border-radius:50px;
+    top:40px;
+    left:120px;
+    background:radial-gradient(circle,#ffcc00,#ff6600);
+    box-shadow:0 0 20px rgba(255,140,0,0.6);
+    opacity:0;
+    transform:scale(0);
+    transition:all 1.2s ease;
+}
+
 /* =========================
-   PHAGE (SMALL + TOP DOWN)
+   PHAGE
 ========================= */
 #virusContainer{
     position:absolute;
-    top:15%;
+    top:0;
     left:50%;
+    transform:translate(-50%, -20%) scale(0.4);
     width:90px;
     height:140px;
-    transform:translateX(-50%) scale(0);
     opacity:0;
-    transition:all 0.8s ease;
+    transition:all 1s ease;
 }
 
 /* capsid */
@@ -120,7 +134,7 @@ input,button{
     border:1px solid #7fffd4;
 }
 
-/* syringe injector */
+/* injector */
 #injector{
     width:2px;
     height:0px;
@@ -129,6 +143,7 @@ input,button{
     transition:height 0.6s ease;
 }
 
+/* RNA payload */
 #rnaPayload{
     position:absolute;
     top:20px;
@@ -140,7 +155,9 @@ input,button{
     transform:translateX(-50%);
     opacity:0;
     box-shadow:0 0 10px #7fffd4;
+    transition:all 1.2s ease-in-out;
 }
+
 /* fibers */
 .fiber{
     position:absolute;
@@ -158,7 +175,7 @@ input,button{
 .f3{transform:rotate(-20deg);}
 .f4{transform:rotate(-60deg);}
 
-/* RNA */
+/* RNA text */
 .rnaChar{
     position:absolute;
     font-size:18px;
@@ -192,6 +209,7 @@ input,button{
 
     <div id="bacteria">
         <div id="nucleoid"></div>
+        <div id="mitochondria"></div>
     </div>
 
 </div>
@@ -212,145 +230,125 @@ const logBox = document.getElementById("log");
 const camera = document.getElementById("camera");
 
 const rnaPayload = document.getElementById("rnaPayload");
+const mito = document.getElementById("mitochondria");
 
 function sleep(ms){
     return new Promise(r => setTimeout(r, ms));
 }
 
-/* =========================
-   VALIDATION
-========================= */
+/* RESET */
+function reset(){
+    virus.style.opacity = 0;
+    virus.style.transform = "translate(-50%, -20%) scale(0.4)";
+    rnaPayload.style.opacity = 0;
+    mito.style.opacity = 0;
+    mito.style.transform = "scale(0)";
+    bacteria.style.background =
+        "linear-gradient(90deg, rgba(0,255,200,0.15), rgba(0,255,200,0.05), rgba(0,255,200,0.15))";
+}
+
+/* VALIDATION */
 function validateRNA(rna){
     const clean = rna.toUpperCase().trim();
 
     if(!/^[AUGC]+$/.test(clean))
-        return {ok:false, msg:"INVALID RNA BASES"};
+        return {ok:false};
 
     if(clean !== CORRECT_RNA)
-        return {ok:false, msg:"SEQUENCE NOT RECOGNIZED"};
+        return {ok:false};
 
     return {ok:true, clean};
 }
 
-/* =========================
-   CAMERA ZOOM
-========================= */
-async function zoomIn(){
-    camera.style.transform = "translateZ(-220px) scale(1.7)";
-    await sleep(900);
+/* CAMERA */
+async function zoom(){
+    camera.style.transform = "translateZ(-250px) scale(1.6)";
+    await sleep(800);
 }
 
-/* =========================
-   RNA VISUALIZATION (OUTSIDE)
-========================= */
-async function renderRNA(rna){
+/* RNA → VIRUS */
+async function assembleRNA(){
+    logBox.innerText = "RNA PACKAGING INTO VIRUS...";
 
-    logBox.innerText = "RNA FRAGMENT SCANNED...";
+    rnaPayload.style.opacity = 1;
+    await sleep(600);
 
-    await sleep(400);
+    rnaPayload.style.top = "70px";
+    await sleep(600);
+
+    rnaPayload.style.top = "110px";
+    await sleep(600);
 }
 
-/* =========================
-   PHAGE DESCENDS
-========================= */
-async function spawnPhage(){
-
-    logBox.innerText = "BACTERIOPHAGE DESCENDING...";
+/* VIRUS DESCEND */
+async function spawnVirus(){
+    logBox.innerText = "PHAGE DESCENDING...";
 
     virus.style.opacity = 1;
-    virus.style.transform = "translateX(-50%) scale(0.7)";
-    virus.style.top = "12%";
+    virus.style.top = "10%";
 
-    await sleep(900);
+    await sleep(700);
 
     virus.style.top = "40%";
-
-    await sleep(900);
 }
 
-/* =========================
-   INJECTION + RNA RELEASE
-========================= */
+/* INJECTION */
 async function inject(){
-
-    logBox.innerText = "TAIL FIBERS DOCKING...";
-
-    await sleep(500);
-
     logBox.innerText = "INJECTOR ACTIVATED...";
 
     document.getElementById("injector").style.height = "90px";
 
-    /* CREATE RNA PAYLOAD */
-    rnaPayload.style.opacity = 1;
-
-    /* start inside virus */
-    rnaPayload.style.top = "30px";
-
-    await sleep(500);
-
-    logBox.innerText = "RNA TRANSFER INITIATED";
-
-    /* MOVE RNA DOWN INTO CELL */
-    rnaPayload.style.transition = "all 1.5s ease-in-out";
-    rnaPayload.style.top = "170px";   // into cell body
+    rnaPayload.style.top = "150px";
     rnaPayload.style.left = "50%";
 
-    await sleep(1500);
+    await sleep(900);
 
-    /* ENTER NUCLEOID TARGET */
     rnaPayload.style.top = "60px";
     rnaPayload.style.left = "45%";
-    rnaPayload.style.background = "#ff0033";
-    rnaPayload.style.boxShadow = "0 0 15px #ff0033";
 
-    await sleep(1000);
-
-    logBox.innerText = "RNA INTEGRATED INTO HOST NUCLEOID";
+    logBox.innerText = "RNA ENTERED NUCLEOID";
 }
 
-/* =========================
-   MUTATION
-========================= */
-async function mutate(){
+/* MITOCHONDRIA EMERGENCE */
+async function mitoRise(){
 
-    logBox.innerText = "HOST REPROGRAMMING...";
+    logBox.innerText = "BIOLOGICAL ANOMALY FORMING...";
 
     await sleep(700);
 
-    bacteria.style.background =
-        "radial-gradient(circle,#ff0033,#220000)";
+    mito.style.opacity = 1;
+    mito.style.transform = "scale(1)";
 
-    bacteria.style.boxShadow = "0 0 60px #ff0033";
+    await sleep(600);
+    mito.style.boxShadow = "0 0 50px orange";
+
+    await sleep(700);
+    mito.style.transform = "scale(1.2)";
 
     await sleep(700);
 
-    logBox.innerText =
-        "ANOMALY: MITOCHONDRIA-LIKE STRUCTURE FORMED INSIDE E.COLI";
+    logBox.innerText = "MITOCHONDRIA-LIKE STRUCTURE STABILIZED";
 }
 
-/* =========================
-   MAIN
-========================= */
+/* MAIN */
 runBtn.onclick = async () => {
 
-    const result = validateRNA(rnaInput.value);
+    reset();
 
+    const result = validateRNA(rnaInput.value);
     if(!result.ok){
-        logBox.innerText = result.msg;
+        logBox.innerText = "INVALID OR INCORRECT RNA";
         return;
     }
 
     logBox.innerText = "SEQUENCE ACCEPTED";
 
-    await renderRNA(result.clean);
-
-    await zoomIn();
-    await spawnPhage();
+    await zoom();
+    await spawnVirus();
+    await assembleRNA();
     await inject();
-    await mutate();
+    await mitoRise();
 };
-
 </script>
 
 </body>
