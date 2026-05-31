@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>VIRUS SIMULATOR</title>
+
+<style>
+body {
+    margin:0;
+    background:black;
+    color:#00ffcc;
+    font-family:monospace;
+    text-align:center;
+}
+
+.screen {
+    display:none;
+    padding:40px;
+}
+
+.active {
+    display:block;
+}
+
+#virus {
+    margin-top:40px;
+    font-size:20px;
+    letter-spacing:4px;
+    opacity:0;
+    transition:2s;
+}
+
+.glow {
+    opacity:1;
+    text-shadow:0 0 10px #00ffcc;
+}
+
+button, input {
+    background:black;
+    color:#00ffcc;
+    border:1px solid #00ffcc;
+    padding:10px;
+    margin:10px;
+    font-family:monospace;
+}
+</style>
+</head>
+
+<body>
+
+<!-- RNA INPUT -->
+<div id="screen1" class="screen active">
+    <h1>RNA SEQUENCE INPUT</h1>
+    <input id="rnaInput" placeholder="Paste RNA sequence">
+    <br>
+    <button onclick="checkRNA()">SUBMIT</button>
+</div>
+
+<!-- VIRUS BUILD -->
+<div id="screen2" class="screen">
+    <h1>ASSEMBLING VIRUS...</h1>
+    <div id="virus">AUGCGAUCGUAACGUGCUAUGCGA</div>
+</div>
+
+<!-- INFECTION -->
+<div id="screen3" class="screen">
+    <h1>INFECTION IN PROGRESS</h1>
+    <p>Bacteria compromised...</p>
+</div>
+
+<!-- NAME -->
+<div id="screen4" class="screen">
+    <h1>ENTER FINAL NAME</h1>
+    <p>ENTERBACTERIA ________</p>
+    <input id="nameInput">
+    <button onclick="checkName()">VERIFY</button>
+</div>
+
+<!-- FINAL -->
+<div id="screen5" class="screen">
+    <h1>ENTEROBACTERIA GENESIS</h1>
+    <button onclick="generate()">GENERATE IMAGE</button>
+    <div id="finalVisual"></div>
+</div>
+
+<script>
+
+const correctRNA = "AUGCGAUCGUAACGUGCUAUGCGA";
+
+function showScreen(id){
+    document.querySelectorAll(".screen")
+    .forEach(s => s.classList.remove("active"));
+
+    document.getElementById(id).classList.add("active");
+}
+
+function checkRNA(){
+    const val = document.getElementById("rnaInput").value.trim();
+
+    if(val === correctRNA){
+        showScreen("screen2");
+
+        setTimeout(() => {
+            document.getElementById("virus").classList.add("glow");
+        }, 1000);
+
+        setTimeout(() => {
+            showScreen("screen3");
+        }, 4000);
+    }
+}
+
+function checkName(){
+    const val = document.getElementById("nameInput").value.trim().toLowerCase();
+
+    if(val === "genesis"){
+        showScreen("screen5");
+    }
+}
+
+function generate(){
+    document.getElementById("finalVisual").innerHTML =
+        "🧬 ENTEROBACTERIA GENESIS CREATED";
+}
+
+</script>
+
+</body>
+</html>
