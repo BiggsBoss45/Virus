@@ -13,7 +13,7 @@ body{
     color:#00ffcc;
 }
 
-/* ======= 3D SPACE CONTAINER ======= */
+/* 3D SPACE */
 #space{
     position:relative;
     width:100vw;
@@ -22,24 +22,21 @@ body{
     overflow:hidden;
 }
 
-/* CAMERA (MOVES WHOLE UNIVERSE) */
 #camera{
     position:absolute;
     width:100%;
     height:100%;
     transform-style:preserve-3d;
-    transform:translateZ(0px) scale(1);
     transition: transform 2s ease-in-out;
 }
 
-/* ======= BACKGROUND LAYER ======= */
+/* BACKGROUND */
 .layer-back{
     position:absolute;
     width:100%;
     height:100%;
     transform:translateZ(-600px) scale(2);
     opacity:0.25;
-    filter:blur(1px);
 }
 
 .star{
@@ -47,11 +44,9 @@ body{
     width:2px;
     height:2px;
     background:#00ffcc;
-    border-radius:50%;
-    opacity:0.4;
 }
 
-/* ======= MID LAYER ======= */
+/* MID */
 .layer-mid{
     position:absolute;
     width:100%;
@@ -60,7 +55,6 @@ body{
     opacity:0.5;
 }
 
-/* FLOATING PARTICLES */
 .particle{
     position:absolute;
     width:6px;
@@ -70,27 +64,25 @@ body{
     opacity:0.2;
 }
 
-/* ======= ACTION LAYER ======= */
+/* FRONT */
 .layer-front{
     position:absolute;
     width:100%;
     height:100%;
-    transform:translateZ(0px);
 }
 
 /* VIRUS */
-#virus{
-    width:60px;
-    height:60px;
+#virusCore{
+    width:70px;
+    height:70px;
     border-radius:50%;
-    background:radial-gradient(circle, #00ffcc, #003333);
-    box-shadow:0 0 25px #00ffcc;
     position:absolute;
     top:50%;
     left:40%;
-    transform:translateZ(0px) scale(0);
+    transform:scale(0);
     opacity:0;
-    transition: all 1.2s ease-in-out;
+    background:radial-gradient(circle,#00ffcc,#003333);
+    box-shadow:0 0 25px #00ffcc;
 }
 
 /* BACTERIA */
@@ -102,28 +94,42 @@ body{
     position:absolute;
     top:50%;
     left:55%;
-    transform:translateZ(0px) scale(1);
     opacity:0;
     box-shadow:0 0 10px #00ffcc;
-    transition: all 1s ease;
 }
 
-/* RNA DISPLAY */
-#rnaDisplay{
+/* CAPSID */
+#capsid{
     position:absolute;
-    bottom:20px;
-    width:100%;
-    text-align:center;
-    z-index:10;
+    width:120px;
+    height:120px;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0);
+    opacity:0;
 }
 
-/* UI */
-#ui{
+.node{
     position:absolute;
-    top:20px;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#00ffcc;
+}
+
+.edge{
+    position:absolute;
+    height:2px;
+    background:#00ffcc;
+    transform-origin:left center;
+}
+
+#rnaChain{
+    position:absolute;
     width:100%;
     text-align:center;
-    z-index:10;
+    top:45%;
+    opacity:0;
 }
 
 input, button{
@@ -131,153 +137,120 @@ input, button{
     border:1px solid #00ffcc;
     color:#00ffcc;
     padding:10px;
-    pointer-events:auto;
-}
-
-button:hover{
-    background:#00ffcc;
-    color:black;
-}
-
-/* SHAKE */
-@keyframes shake {
-    0% { transform: translate(0,0) scale(1.05); }
-    25% { transform: translate(3px,-2px) scale(1.05); }
-    50% { transform: translate(-3px,2px) scale(1.05); }
-    75% { transform: translate(2px,2px) scale(1.05); }
-    100% { transform: translate(0,0) scale(1.05); }
 }
 </style>
 </head>
 
 <body>
 
-<div id="ui">
-    <input id="rnaInput" placeholder="Enter RNA sequence">
-    <button onclick="startSimulation()">GENERATE</button>
-</div>
-
 <div id="space">
+<div id="camera">
 
-    <div id="camera">
+<div class="layer-back" id="back"></div>
+<div class="layer-mid" id="mid"></div>
 
-        <!-- BACK LAYER -->
-        <div class="layer-back" id="back"></div>
+<div class="layer-front">
 
-        <!-- MID LAYER -->
-        <div class="layer-mid" id="mid"></div>
+<div id="virusCore"></div>
+<div id="bacteria"></div>
+<div id="capsid"></div>
+<div id="rnaChain"></div>
 
-        <!-- FRONT LAYER -->
-        <div class="layer-front">
-
-            <div id="virus"></div>
-            <div id="bacteria"></div>
-
-        </div>
-
-    </div>
 </div>
 
-<div id="rnaDisplay"></div>
+</div>
+</div>
+
+<div style="position:absolute;top:10px;width:100%;text-align:center;">
+<input id="rnaInput" placeholder="Enter RNA">
+<button onclick="startSimulation()">GENERATE</button>
+</div>
 
 <script>
 
-const camera = document.getElementById("camera");
-const virus = document.getElementById("virus");
+const virusCore = document.getElementById("virusCore");
 const bacteria = document.getElementById("bacteria");
-const rnaDisplay = document.getElementById("rnaDisplay");
+const capsid = document.getElementById("capsid");
+const rnaChain = document.getElementById("rnaChain");
+const camera = document.getElementById("camera");
 
-function sleep(ms){
-    return new Promise(r => setTimeout(r, ms));
-}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-/* ======= GENERATE DEPTH FIELD ======= */
-function generateSpace(){
-    const back = document.getElementById("back");
-    const mid = document.getElementById("mid");
+/* ===== CAPSID BUILD ===== */
+async function buildCapsid(rna){
 
-    for(let i=0;i<80;i++){
-        let s = document.createElement("div");
-        s.className="star";
-        s.style.top=Math.random()*100+"%";
-        s.style.left=Math.random()*100+"%";
-        back.appendChild(s);
+    rnaChain.innerText = "RNA: " + rna;
+    rnaChain.style.opacity = 1;
+
+    await sleep(800);
+
+    rnaChain.style.opacity = 0;
+
+    capsid.style.opacity = 1;
+    capsid.style.transform = "translate(-50%,-50%) scale(1)";
+
+    const points = [
+        [0,-40],[35,-20],[35,20],
+        [0,40],[-35,20],[-35,-20]
+    ];
+
+    let nodes = [];
+
+    for(let i=0;i<points.length;i++){
+        const n = document.createElement("div");
+        n.className="node";
+        n.style.left = (60+points[i][0])+"px";
+        n.style.top = (60+points[i][1])+"px";
+        capsid.appendChild(n);
+        nodes.push(n);
+        await sleep(150);
     }
 
-    for(let i=0;i<40;i++){
-        let p = document.createElement("div");
-        p.className="particle";
-        p.style.top=Math.random()*100+"%";
-        p.style.left=Math.random()*100+"%";
-        mid.appendChild(p);
-    }
+    return true;
 }
 
-generateSpace();
+/* ===== DOCK ANIMATION ===== */
+async function dockVirus(){
 
+    virusCore.style.opacity = 1;
+    virusCore.style.transform = "scale(1)";
+
+    virusCore.style.transition = "all 2s ease";
+    virusCore.style.transform = "translate(120px,10px) scale(1.1)";
+    await sleep(1500);
+
+    virusCore.style.transform = "translate(100px,-10px) scale(1.05)";
+    await sleep(600);
+
+    virusCore.style.transform = "translate(105px,5px) scale(1.25)";
+
+    bacteria.style.opacity = 1;
+    bacteria.style.boxShadow = "0 0 80px red";
+
+    await sleep(500);
+}
+
+/* ===== MAIN ===== */
 async function startSimulation(){
 
     const rna = document.getElementById("rnaInput").value;
-    if(!rna){
-        alert("RNA sequence required");
-        return;
-    }
+    if(!rna) return alert("Enter RNA");
 
-    /* RESET */
-    virus.style.opacity = 0;
-    bacteria.style.opacity = 0;
     camera.style.transform = "translateZ(0px) scale(1)";
-    rnaDisplay.innerText = "";
 
-    bacteria.style.opacity = 1;
+    await buildCapsid(rna);
+    await dockVirus();
 
-    rnaDisplay.innerText = "RNA SEQUENCE LOCKED: " + rna;
+    camera.style.transform = "translateZ(-300px) scale(1.8)";
 
-    await sleep(1000);
-
-    /* VIRUS BUILD */
-    virus.style.opacity = 1;
-    virus.style.transform = "translateZ(0px) scale(0.3)";
-    await sleep(600);
-
-    virus.style.transform = "translateZ(0px) scale(0.6)";
-    await sleep(600);
-
-    virus.style.transform = "translateZ(0px) scale(1)";
-    await sleep(800);
-
-    /* CAMERA PUSH (DEPTH EFFECT) */
-    camera.style.transform = "translateZ(-200px) scale(1.5)";
-    await sleep(1200);
-
-    /* APPROACH */
-    virus.style.transform = "translate(20px,-10px) scale(1.1)";
-    await sleep(900);
-
-    virus.style.transform = "translate(40px,10px) scale(1.05)";
-    await sleep(900);
-
-    /* DOCK */
-    virus.style.transform = "translate(50px,0px) scale(1.2)";
-    bacteria.style.animation = "shake 0.4s";
-
-    await sleep(400);
-    bacteria.style.animation = "";
-
-    /* ATTACH */
-    virus.style.boxShadow = "0 0 40px red";
-    bacteria.style.boxShadow = "0 0 60px red";
-    bacteria.style.borderColor = "red";
-
-    await sleep(900);
-
-    /* MUTATION */
-    bacteria.style.background = "radial-gradient(circle, #ff0044, #220000)";
+    bacteria.style.background = "radial-gradient(circle,#ff0044,#220000)";
     bacteria.style.transform = "scale(1.2)";
 
-    camera.style.transform = "translateZ(-400px) scale(2)";
-
-    rnaDisplay.innerText = "HOST MODIFICATION COMPLETE: GENESIS VARIANT FORMED";
+    document.body.insertAdjacentHTML("beforeend",
+      `<div style="position:absolute;bottom:20px;width:100%;text-align:center;color:#00ffcc">
+        HOST MODIFICATION COMPLETE
+      </div>`
+    );
 }
 
 </script>
