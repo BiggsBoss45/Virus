@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GENESIS SIMULATION CORE - CAMERA UPGRADE</title>
+<title>GENESIS SIMULATION CORE</title>
 
 <style>
 body{
@@ -29,15 +29,11 @@ input,button{
     padding:10px;
 }
 
-button:hover{
-    background:#7fffd4;
-    color:black;
-}
-
 /* LOG */
 #log{
     position:absolute;
     bottom:15px;
+    width:100%;
     width:100%;
     text-align:center;
 }
@@ -48,7 +44,6 @@ button:hover{
     width:100vw;
     height:100vh;
     perspective:1400px;
-    overflow:hidden;
 }
 
 #camera{
@@ -56,113 +51,107 @@ button:hover{
     width:100%;
     height:100%;
     transform-style:preserve-3d;
-    transition: transform 2.5s cubic-bezier(.2,.8,.2,1);
+    transition: transform 1.5s ease-in-out;
 }
 
 /* =========================
-   BACTERIA
+   E.COLI
 ========================= */
 #bacteria{
     position:absolute;
     width:320px;
     height:120px;
-    top:50%;
-    left:60%;
-    transform:translate(-50%,-50%);
+    top:55%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0.9);
     border-radius:60px;
-    background:rgba(0,255,200,0.08);
+    background:linear-gradient(90deg,
+        rgba(0,255,200,0.15),
+        rgba(0,255,200,0.05),
+        rgba(0,255,200,0.15)
+    );
     border:1px solid rgba(127,255,212,0.4);
     box-shadow: inset 0 0 30px rgba(0,255,200,0.15);
-    transition:all 1s ease;
+    overflow:hidden;
 }
 
-/* membrane pulse on hit */
-.hit{
-    animation: pulse 0.6s ease;
-}
-
-@keyframes pulse{
-    0%{transform:translate(-50%,-50%) scale(1);}
-    50%{transform:translate(-50%,-50%) scale(1.08);}
-    100%{transform:translate(-50%,-50%) scale(1);}
+/* NUCLEOID */
+#nucleoid{
+    position:absolute;
+    width:120px;
+    height:60px;
+    top:30px;
+    left:90px;
+    background:rgba(255,255,255,0.05);
+    border-radius:50%;
+    filter:blur(1px);
 }
 
 /* =========================
-   VIRUS
+   PHAGE (SMALL + TOP DOWN)
 ========================= */
 #virusContainer{
     position:absolute;
-    top:35%;
-    left:30%;
-    width:120px;
-    height:220px;
-    transform:scale(0);
+    top:15%;
+    left:50%;
+    width:90px;
+    height:140px;
+    transform:translateX(-50%) scale(0);
     opacity:0;
-    transition:all 1s ease;
+    transition:all 0.8s ease;
 }
 
 /* capsid */
 #capsidShell{
-    width:70px;
-    height:70px;
+    width:55px;
+    height:55px;
     margin:0 auto;
-    border-radius:12px;
-    background:radial-gradient(circle,#7fffd4,#001);
+    border-radius:10px;
+    background:radial-gradient(circle,#7fffd4,#0a1a1a);
     border:1px solid #7fffd4;
 }
 
 /* tail */
 #tailTube{
-    width:10px;
-    height:70px;
+    width:8px;
+    height:50px;
     margin:0 auto;
-    background:rgba(127,255,212,0.2);
+    background:rgba(127,255,212,0.25);
     border:1px solid #7fffd4;
 }
 
 /* syringe injector */
 #injector{
-    width:3px;
+    width:2px;
     height:0px;
     margin:0 auto;
     background:#7fffd4;
-    transition:height 0.8s ease;
-    box-shadow:0 0 10px #7fffd4;
+    transition:height 0.6s ease;
 }
 
-/* legs */
-.leg{
+/* fibers */
+.fiber{
     position:absolute;
-    width:50px;
+    width:25px;
     height:2px;
     background:#7fffd4;
-    top:140px;
-    left:50px;
+    top:90px;
+    left:50%;
     transform-origin:left;
     opacity:0.6;
 }
 
-.leg:nth-child(4){transform:rotate(20deg);}
-.leg:nth-child(5){transform:rotate(60deg);}
-.leg:nth-child(6){transform:rotate(-20deg);}
-.leg:nth-child(7){transform:rotate(-60deg);}
-.leg:nth-child(8){transform:rotate(120deg);}
-.leg:nth-child(9){transform:rotate(-120deg);}
+.f1{transform:rotate(20deg);}
+.f2{transform:rotate(60deg);}
+.f3{transform:rotate(-20deg);}
+.f4{transform:rotate(-60deg);}
 
 /* RNA */
 .rnaChar{
     position:absolute;
-    font-size:20px;
+    font-size:18px;
     color:#7fffd4;
     transition:all 1s ease;
-}
-
-/* RNA layer */
-#rnaLayer{
-    position:absolute;
-    width:100%;
-    height:100%;
-    pointer-events:none;
 }
 </style>
 </head>
@@ -175,26 +164,24 @@ button:hover{
 </div>
 
 <div id="space">
-    <div id="camera">
+<div id="camera">
 
-        <div id="rnaLayer"></div>
+    <div id="virusContainer">
+        <div id="capsidShell"></div>
+        <div id="tailTube"></div>
+        <div id="injector"></div>
 
-        <div id="virusContainer">
-            <div id="capsidShell"></div>
-            <div id="tailTube"></div>
-            <div id="injector"></div>
-
-            <div class="leg"></div>
-            <div class="leg"></div>
-            <div class="leg"></div>
-            <div class="leg"></div>
-            <div class="leg"></div>
-            <div class="leg"></div>
-        </div>
-
-        <div id="bacteria"></div>
-
+        <div class="fiber f1"></div>
+        <div class="fiber f2"></div>
+        <div class="fiber f3"></div>
+        <div class="fiber f4"></div>
     </div>
+
+    <div id="bacteria">
+        <div id="nucleoid"></div>
+    </div>
+
+</div>
 </div>
 
 <div id="log">Awaiting sequence...</div>
@@ -209,7 +196,6 @@ const rnaInput = document.getElementById("rnaInput");
 const virus = document.getElementById("virusContainer");
 const bacteria = document.getElementById("bacteria");
 const logBox = document.getElementById("log");
-const rnaLayer = document.getElementById("rnaLayer");
 const camera = document.getElementById("camera");
 
 function sleep(ms){
@@ -222,34 +208,40 @@ function sleep(ms){
 function validateRNA(rna){
     const clean = rna.toUpperCase().trim();
 
-    if(!/^[AUGC]+$/.test(clean)){
+    if(!/^[AUGC]+$/.test(clean))
         return {ok:false, msg:"INVALID RNA BASES"};
-    }
 
-    if(clean !== CORRECT_RNA){
-        return {ok:false, msg:"SEQUENCE REJECTED"};
-    }
+    if(clean !== CORRECT_RNA)
+        return {ok:false, msg:"SEQUENCE NOT RECOGNIZED"};
 
     return {ok:true, clean};
 }
 
 /* =========================
-   RNA VISUAL
+   CAMERA ZOOM IN
+========================= */
+async function zoomIn(){
+    camera.style.transform = "translateZ(-200px) scale(1.6)";
+    await sleep(900);
+}
+
+/* =========================
+   RNA EFFECT
 ========================= */
 async function renderRNA(rna){
 
-    rnaLayer.innerHTML = "";
+    logBox.innerText = "RNA FRAGMENT DETECTED...";
 
     for(let c of rna){
         const el = document.createElement("div");
         el.className = "rnaChar";
         el.innerText = c;
 
-        el.style.left = Math.random()*80 + "%";
-        el.style.top = Math.random()*60 + "%";
+        el.style.left = (40 + Math.random()*20) + "%";
+        el.style.top = (35 + Math.random()*20) + "%";
 
-        rnaLayer.appendChild(el);
-        await sleep(50);
+        document.body.appendChild(el);
+        await sleep(40);
     }
 
     await sleep(700);
@@ -258,86 +250,66 @@ async function renderRNA(rna){
         e.style.left = "50%";
         e.style.top = "45%";
         e.style.opacity = "0";
-        e.style.transform = "translate(-50%,-50%) scale(0)";
     });
 
     await sleep(900);
-    rnaLayer.innerHTML = "";
+
+    document.querySelectorAll(".rnaChar").forEach(e=>e.remove());
 }
 
 /* =========================
-   VIRUS BUILD
+   PHAGE DESCENDS FROM TOP
 ========================= */
-async function spawnVirus(){
-    logBox.innerText = "VIRUS ASSEMBLING";
+async function spawnPhage(){
+
+    logBox.innerText = "BACTERIOPHAGE APPROACHING FROM ABOVE...";
 
     virus.style.opacity = 1;
-    virus.style.transform = "scale(1)";
+    virus.style.transform = "translateX(-50%) scale(0.7)";
+    virus.style.top = "10%";
 
     await sleep(800);
 
-    document.getElementById("injector").style.height = "60px";
+    virus.style.top = "38%"; // move down toward E.coli
+
+    await sleep(900);
 }
 
 /* =========================
-   CAMERA ZOOM (NEW)
-========================= */
-async function cameraZoom(){
-    logBox.innerText = "ZOOMING INTO BIOLOGICAL TARGET";
-
-    camera.style.transform =
-        "translateZ(-500px) scale(2)";
-
-    await sleep(1200);
-
-    camera.style.transform =
-        "translateZ(-800px) scale(3)";
-
-    await sleep(1200);
-}
-
-/* =========================
-   SYRINGE INJECTION (NEW)
+   INJECTION (SYRINGE DOWNWARD)
 ========================= */
 async function inject(){
-    logBox.innerText = "INJECTION SEQUENCE INITIATED";
 
-    // move virus onto bacteria
-    virus.style.left = "45%";
-    virus.style.top = "45%";
-
-    await sleep(800);
-
-    // extend syringe
-    const injector = document.getElementById("injector");
-    injector.style.height = "140px";
-
-    // impact reaction
-    bacteria.classList.add("hit");
-
-    bacteria.style.boxShadow = "0 0 60px red";
+    logBox.innerText = "TAIL FIBERS DOCKING...";
 
     await sleep(600);
 
-    bacteria.classList.remove("hit");
+    logBox.innerText = "INJECTOR EXTENDING...";
 
-    await sleep(800);
+    document.getElementById("injector").style.height = "90px";
+
+    bacteria.style.boxShadow = "0 0 40px #ff0033";
+    bacteria.style.transform = "translate(-50%,-50%) scale(0.95)";
+
+    await sleep(1000);
 }
 
 /* =========================
-   MUTATION
+   MUTATION REVEAL
 ========================= */
 async function mutate(){
 
-    logBox.innerText = "HOST CELL REPROGRAMMING";
+    logBox.innerText = "HOST REPROGRAMMING...";
+
+    await sleep(800);
 
     bacteria.style.background =
         "radial-gradient(circle,#ff0033,#220000)";
 
-    await sleep(800);
+    await sleep(700);
 
     logBox.innerText =
-        "ANOMALY: MITOCHONDRIAL-LIKE STRUCTURE DETECTED";
+        "ANOMALY: MITOCHONDRIA-LIKE STRUCTURE FORMED INSIDE E.COLI";
 }
 
 /* =========================
@@ -354,14 +326,11 @@ runBtn.onclick = async () => {
 
     logBox.innerText = "SEQUENCE ACCEPTED";
 
-    await sleep(400);
-
     await renderRNA(result.clean);
-    await spawnVirus();
 
-    await cameraZoom();   // ⭐ NEW
-    await inject();       // ⭐ NEW
-
+    await zoomIn();
+    await spawnPhage();
+    await inject();
     await mutate();
 };
 
