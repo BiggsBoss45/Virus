@@ -134,10 +134,9 @@ button:hover{
 
 /* ===== RNA LETTERS ===== */
 .rnaChar{
-    position:absolute;
-    font-size:28px;
-    color:#00ffcc;
-    transition:all 1.5s ease;
+    font-size: 24px;
+    color: #00ffcc;
+    transition: all 1s ease;
 }
 </style>
 </head>
@@ -174,24 +173,32 @@ button:hover{
 
 <script>
 
-const CORRECT_RNA = "AUGCGAUCGUAACGUGCUAUGCGA";
+const runBtn = document.getElementById("runBtn");
+const rnaInput = document.getElementById("rnaInput");
 
-const virus = document.getElementById("virusContainer");
-const bacteria = document.getElementById("bacteria");
-const rnaDisplay = document.getElementById("rnaDisplay");
-const injector = document.getElementById("injector");
+const rnaLayer = document.getElementById("viralRNA");
+const phage = document.getElementById("phage");
+const ecoli = document.getElementById("ecoli");
+const logBox = document.getElementById("simulationLog");
+
+const needle = document.querySelector(".tailNeedle");
+const sheath = document.querySelector(".tailSheath");
+
+const CORRECT_RNA = "AUGCGAUCGUAACGUGCUAUGCGA";
 
 function sleep(ms){
     return new Promise(r => setTimeout(r, ms));
 }
 
-/* ===== VALIDATION ===== */
+/* =========================
+   VALIDATION
+========================= */
 function validateRNA(rna){
 
     const clean = rna.toUpperCase().trim();
 
     if(!/^[AUGC]+$/.test(clean)){
-        return {ok:false, msg:"INVALID RNA: ONLY A U G C ALLOWED"};
+        return {ok:false, msg:"ERROR: INVALID RNA BASES DETECTED"};
     }
 
     if(clean !== CORRECT_RNA){
@@ -201,104 +208,122 @@ function validateRNA(rna){
     return {ok:true, clean};
 }
 
-/* ===== RNA → VIRUS ASSEMBLY ===== */
-async function assembleRNA(rna){
+/* =========================
+   RNA → ENERGY PARTICLES
+========================= */
+async function renderRNA(rna){
 
-    rnaDisplay.innerHTML = "";
+    rnaLayer.innerHTML = "";
+    rnaLayer.style.opacity = 1;
 
     const chars = [];
 
     for(let c of rna){
-        const span = document.createElement("div");
+        const span = document.createElement("span");
         span.className = "rnaChar";
         span.innerText = c;
 
-        span.style.left = (Math.random()*80 + 10) + "%";
-        span.style.top = (Math.random()*60 + 20) + "%";
+        span.style.position = "absolute";
+        span.style.left = Math.random()*80 + "%";
+        span.style.top = Math.random()*60 + "%";
 
-        document.body.appendChild(span);
+        rnaLayer.appendChild(span);
         chars.push(span);
 
-        await sleep(120);
+        await sleep(60);
     }
 
-    await sleep(800);
+    await sleep(600);
 
-    // pull into center
-    for(let c of chars){
-        c.style.left = "50%";
-        c.style.top = "45%";
-        c.style.transform = "translate(-50%,-50%) scale(0)";
-        c.style.opacity = "0";
+    for(let s of chars){
+        s.style.left = "50%";
+        s.style.top = "45%";
+        s.style.transform = "translate(-50%,-50%) scale(0)";
+        s.style.opacity = "0";
     }
 
-    await sleep(1200);
-
-    chars.forEach(c => c.remove());
+    await sleep(900);
+    rnaLayer.innerHTML = "";
 }
 
-/* ===== VIRUS BUILD ===== */
-async function buildVirus(){
+/* =========================
+   PHAGE ASSEMBLY
+========================= */
+async function assemblePhage(){
 
-    virus.style.opacity = 1;
-    virus.style.transform = "scale(1)";
+    logBox.innerText = "PHAGE STRUCTURE ASSEMBLING...";
 
-    await sleep(800);
+    phage.style.opacity = 1;
+    phage.style.transform = "scale(1)";
 
-    injector.style.height = "50px";
+    await sleep(900);
 
+    logBox.innerText = "TAIL SYSTEM INITIALIZED";
+}
+
+/* =========================
+   INJECTION SEQUENCE
+========================= */
+async function inject(){
+
+    logBox.innerText = "DOCKING ONTO E.COLI...";
+
+    ecoli.style.opacity = 1;
+
+    await sleep(700);
+
+    sheath.style.transform = "scaleY(1.4)";
     await sleep(500);
-}
 
-/* ===== INFECTION ===== */
-async function infect(){
+    needle.style.height = "120px";
 
-    bacteria.style.opacity = 1;
-    bacteria.style.transform = "scale(1)";
+    ecoli.style.boxShadow = "0 0 40px red";
+    ecoli.style.transform = "scale(1.05)";
 
     await sleep(800);
-
-    injector.style.height = "90px";
-
-    await sleep(800);
-
-    bacteria.style.borderColor = "red";
-    bacteria.style.boxShadow = "0 0 40px red";
 }
 
-/* ===== MITOCHONDRIA REVEAL ===== */
-async function mitochondriaReveal(){
+/* =========================
+   MUTATION EVENT
+========================= */
+async function mutate(){
 
-    bacteria.style.background =
+    logBox.innerText = "HOST GENOME COMPROMISED...";
+
+    await sleep(700);
+
+    ecoli.style.background =
         "radial-gradient(circle,#ff0044,#220000)";
 
-    bacteria.style.transform = "scale(1.2)";
+    ecoli.style.borderColor = "red";
 
-    rnaDisplay.innerText =
-        "ANOMALY DETECTED: MITOCHONDRION FORMED INSIDE PROKARYOTE";
+    await sleep(700);
+
+    logBox.innerText =
+        "ANOMALY DETECTED: MITOCHONDRIAL STRUCTURE FORMED INSIDE PROKARYOTE";
 }
 
-/* ===== MAIN ===== */
-async function startSimulation(){
+/* =========================
+   MAIN PIPELINE
+========================= */
+runBtn.onclick = async () => {
 
-    const input = document.getElementById("rnaInput").value;
-
-    const result = validateRNA(input);
+    const result = validateRNA(rnaInput.value);
 
     if(!result.ok){
-        rnaDisplay.innerText = result.msg;
+        logBox.innerText = result.msg;
         return;
     }
 
-    rnaDisplay.innerText = "SEQUENCE ACCEPTED";
+    logBox.innerText = "SEQUENCE ACCEPTED";
 
-    await sleep(800);
+    await sleep(600);
 
-    await assembleRNA(result.clean);
-    await buildVirus();
-    await infect();
-    await mitochondriaReveal();
-}
+    await renderRNA(result.clean);
+    await assemblePhage();
+    await inject();
+    await mutate();
+};
 
 </script>
 
