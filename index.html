@@ -242,22 +242,35 @@ async function revealMito(){
 ========================= */
 async function start(){
 
-    const rna = document.getElementById("rnaInput").value;
-    if(!rna) return alert("Enter RNA");
+    const input = document.getElementById("rnaInput");
+    const rna = input.value.trim();
+
+    if(!rna){
+        alert("Enter RNA sequence");
+        return;
+    }
+
+    // visual confirmation (THIS fixes your “I can’t input” feeling)
+    document.getElementById("rnaInput").blur();
+
+    const display = document.createElement("div");
+    display.style.position = "absolute";
+    display.style.bottom = "20px";
+    display.style.width = "100%";
+    display.style.textAlign = "center";
+    display.style.color = "#00ffcc";
+    display.innerText = "RNA LOCKED: " + rna;
+    document.body.appendChild(display);
 
     camera.style.transform = "scale(1)";
 
     await buildCapsid();
     await flyCapsid();
     await dock();
-
-    await sleep(800); // suspense pause
-
+    await sleep(800);
     await revealMito();
 
     camera.style.transform = "scale(1.6)";
-
-    console.log("Simulation complete");
 }
 
 </script>
