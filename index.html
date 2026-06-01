@@ -206,7 +206,9 @@ input,button{
     <button id="runBtn">GENERATE</button>
 </div>
 
-<button id="identifyBtn">IDENTIFY NEW ORGANISM</button>
+<button id="identifyBtn" style="display:none;">
+    IDENTIFY NEW ORGANISM
+</button>
 
 <div id="organismPanel" style="display:none; margin-top:10px;">
     <div id="organismPrompt">Enterobacteria ————</div>
@@ -268,11 +270,18 @@ function sleep(ms){
 
 /* RESET */
 function reset(){
+
     virus.style.opacity = 0;
     virus.style.transform = "translate(-50%, -20%) scale(0.4)";
+
     rnaPayload.style.opacity = 0;
+
     mito.style.opacity = 0;
     mito.style.transform = "scale(0)";
+
+    identifyBtn.style.display = "none";
+    organismPanel.style.display = "none";
+
     bacteria.style.background =
         "linear-gradient(90deg, rgba(0,255,200,0.15), rgba(0,255,200,0.05), rgba(0,255,200,0.15))";
 }
@@ -396,7 +405,15 @@ async function mitoRise(){
 
     await sleep(700);
 
-    logBox.innerText = "MITOCHONDRIA-LIKE STRUCTURE STABILIZED";
+    logBox.innerText =
+"MITOCHONDRIA-LIKE STRUCTURE STABILIZED";
+
+await sleep(1000);
+
+identifyBtn.style.display = "inline-block";
+
+logBox.innerText =
+"NEW ORGANISM DETECTED - IDENTIFICATION AVAILABLE";
 }
 
 /* MAIN */
