@@ -310,28 +310,42 @@ function validateRNA(rna){
 
 function showOrganismImage(){
 
-    const img = document.createElement("img");
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.top = "50%";
+    container.style.left = "50%";
+    container.style.transform = "translate(-50%,-50%)";
+    container.style.textAlign = "center";
 
+    const img = document.createElement("img");
     img.src = "Genesis.jpg";
-    img.style.position = "absolute";
-    img.style.top = "50%";
-    img.style.left = "50%";
-    img.style.transform = "translate(-50%,-50%) scale(0)";
-    img.style.transition = "all 1.5s ease";
     img.style.maxWidth = "60%";
-img.style.opacity = "0";
-img.style.boxShadow = "0 0 40px #7fffd4";
+    img.style.opacity = "0";
+    img.style.transition = "all 1.5s ease";
+    img.style.boxShadow = "0 0 40px #7fffd4";
+
+    const label = document.createElement("div");
+    label.innerText = "Enterobacteria Genesis";
+    label.style.marginTop = "15px";
+    label.style.color = "#7fffd4";
+    label.style.fontSize = "20px";
+    label.style.letterSpacing = "2px";
+    label.style.opacity = "0";
+    label.style.transition = "all 1.5s ease";
+
+    container.appendChild(img);
+    container.appendChild(label);
 
     document.getElementById("space").style.display = "none";
-document.getElementById("ui").style.display = "none";
+    document.getElementById("ui").style.display = "none";
 
-document.body.appendChild(img);
+    document.body.appendChild(container);
 
     setTimeout(() => {
-        img.style.transform =
-    "translate(-50%,-50%) scale(1)";
+        img.style.opacity = "1";
+        img.style.transform = "scale(1)";
 
-img.style.opacity = "1";
+        label.style.opacity = "1";
     }, 100);
 }
 /* CAMERA */
