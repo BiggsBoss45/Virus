@@ -172,6 +172,13 @@ input,button{
     font-size:18px;
 }
 
+#identifyBtn{
+    position:absolute;
+    top:80px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:1000;
+}
 /* fibers */
 .fiber{
     position:absolute;
@@ -204,11 +211,13 @@ input,button{
 <div id="ui">
     <input id="rnaInput" placeholder="Enter RNA sequence">
     <button id="runBtn">GENERATE</button>
-</div>
 
-<button id="identifyBtn" style="display:none;">
-    IDENTIFY NEW ORGANISM
-</button>
+    <br><br>
+
+    <button id="identifyBtn" style="display:none;">
+        IDENTIFY NEW ORGANISM
+    </button>
+</div>
 
 <div id="organismPanel" style="display:none; margin-top:10px;">
     <div id="organismPrompt">Enterobacteria ————</div>
