@@ -22,6 +22,21 @@ body{
     z-index:10;
 }
 
+#organismPanel{
+    position:absolute;
+    top:70px;
+    width:100%;
+    text-align:center;
+    color:#7fffd4;
+}
+
+#identifyBtn{
+    position:absolute;
+    top:80px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:1000;
+}
 input,button{
     background:#000;
     border:1px solid #7fffd4;
@@ -159,26 +174,11 @@ input,button{
     transition:all 1.2s ease-in-out;
 }
 
-#organismPanel{
-    position:absolute;
-    top:70px;
-    width:100%;
-    text-align:center;
-    color:#7fffd4;
-}
-
 #organismPrompt{
     margin-bottom:10px;
     font-size:18px;
 }
 
-#identifyBtn{
-    position:absolute;
-    top:80px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:1000;
-}
 /* fibers */
 .fiber{
     position:absolute;
@@ -217,12 +217,12 @@ input,button{
     <button id="identifyBtn" style="display:none;">
         IDENTIFY NEW ORGANISM
     </button>
-</div>
 
-<div id="organismPanel" style="display:none; margin-top:10px;">
-    <div id="organismPrompt">Enterobacteria ————</div>
-    <input id="organismInput" placeholder="Enter classification">
-    <button id="submitOrg">SUBMIT</button>
+    <div id="organismPanel" style="display:none; margin-top:15px;">
+        <div id="organismPrompt">Enterobacteria ————</div>
+        <input id="organismInput" placeholder="Enter classification">
+        <button id="submitOrg">SUBMIT</button>
+    </div>
 </div>
 
 <div id="space">
